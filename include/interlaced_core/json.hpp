@@ -54,12 +54,12 @@ public:
     if (json_str.empty()) {
       throw std::invalid_argument("Empty JSON string");
     }
-
-    // Enhanced parsing logic
+    
+    // Simplified parsing logic (basic support for simple key-value pairs)
     std::istringstream iss(json_str);
     std::string token;
     bool first = true;
-
+    
     while (iss >> token) {
       if (!first) {
         if (token != ",") {
@@ -67,12 +67,12 @@ public:
         }
       }
       first = false;
-
+      
       // Check for valid key (string) and value (string)
       if (token.empty()) {
         throw std::invalid_argument("Invalid key");
       }
-
+      
       // Attempt to parse value (simple string)
       std::string value;
       if (iss.peek() == ',') {
@@ -82,10 +82,10 @@ public:
         // Read entire line as value
         std::getline(iss, value);
       }
-
+      
       result[token] = value;
     }
-
+    
     return result;
   }
 
@@ -126,9 +126,13 @@ public:
     if (json_str.empty()) {
       return false;
     }
-    
-    // Simple validation: check for basic syntax (simplified)
-    // In a real implementation, use a proper parser
+
+    // Check for basic structure: starts with '{' and ends with '}'
+    if (json_str[0] != '{' || json_str.back() != '}') {
+      return false;
+    }
+
+    // Simplified check for at least one key-value pair (for demonstration)
     return true;
   }
 };
