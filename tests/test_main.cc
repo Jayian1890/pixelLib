@@ -5,7 +5,7 @@
 #include "interlaced_core/logging.hpp"
 #include "interlaced_core/network.hpp"
 
-TEST_CASE("sanity: headers compile and basic functionality works") {
+TEST_CASE("sanity: basic functionality") {
     // Basic arithmetic check
     CHECK(1 + 1 == 2);
 
