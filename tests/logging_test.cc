@@ -1,9 +1,10 @@
 #include <filesystem>
 #include <fstream>
-#include <gtest/gtest.h>
 #include <regex>
 #include <sstream>
 #include <thread>
+
+#include <gtest/gtest.h>
 
 #include "interlaced_core/logging.hpp"
 

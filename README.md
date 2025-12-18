@@ -57,8 +57,11 @@ The project includes comprehensive unit tests. Example commands:
 # Run all tests (verbose)
 ctest --test-dir build --output-on-failure -V
 
-# Run a specific test executable or filter
-./build/tests/logging_test --gtest_filter=Logging.*
+# Run a specific test executable
+./build/tests/logging_test
+
+# Run another test executable
+./build/tests/json_test
 
 # Or filter tests via ctest
 ctest --test-dir build -R logging_test -V

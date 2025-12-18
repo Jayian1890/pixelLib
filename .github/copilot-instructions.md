@@ -17,14 +17,14 @@ The "why" behind the header-only design is to simplify integration without linki
 
 ## Testing
 - Tests are in `tests/` subdirectory with `CMakeLists.txt`.
-- Uses Google Test (GTest) fetched via FetchContent.
+- Tests use GoogleTest and include `<gtest/gtest.h>`.
 - Enable testing with `enable_testing()` and add tests via `add_subdirectory(tests)`.
-- Run tests: `ctest` in build directory after building.
+- Run tests: `ctest` in the build directory after building.
 
 ## Developer Workflows
 - CI/CD via GitHub Actions in `.github/workflows/build-test.yml` (assumes standard build and test steps).
 - Debug builds: Add `-DCMAKE_BUILD_TYPE=Debug` to cmake command.
-- Dependencies: GTest is automatically fetched; no external installs needed beyond CMake.
+- Dependencies: no third-party testing framework is required; everything builds with CMake + the standard library.
 
 ## Conventions and Patterns
 - Header files use `.hpp` extension, placed directly in `include/`.
@@ -33,11 +33,11 @@ The "why" behind the header-only design is to simplify integration without linki
 - Example pattern: Interface library with `target_include_directories` for public headers, e.g., `$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>`.
 
 ## Integration Points
-- External dependency: GTest for testing.
+- Tests are implemented using GoogleTest under `tests/` and link to `GTest::gtest_main`.
 - No cross-component communication beyond header includes; each module is self-contained.
 - Installation: `cmake --install build` installs headers to `include/`.
 
 ## Rules & Restrictions
-- No third-party dependencies beyond GTest.
+- No third-party dependencies are required; the testing helpers are part of this repository.
 - Maintain header-only design; no compiled binaries.
 - Follow C++17 standard; no newer features.
