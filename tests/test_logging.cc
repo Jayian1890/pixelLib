@@ -438,6 +438,22 @@ TEST_CASE("format_and_log_with_format_string - placeholders with zero args") {
     Logger::set_level(LOG_INFO);
 }
 
+TEST_CASE("format_and_log_with_format_string - plain char* no extras => simple message") {
+    std::ostringstream output_buffer;
+    std::ostringstream error_buffer;
+    Logger::set_output_streams(output_buffer, error_buffer);
+    Logger::set_level(LOG_DEBUG);
+
+    // No placeholders and no extra args: treat as simple message
+    Logger::info("Plain literal char*");
+
+    const std::string out = output_buffer.str();
+    CHECK(out.find("Plain literal char*") != std::string::npos);
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
 TEST_CASE("Logger - char* wrappers for all levels") {
     std::ostringstream out;
     std::ostringstream err;
@@ -603,6 +619,22 @@ TEST_CASE("Macros with file logger (file+line overload)") {
     Logger::set_level(LOG_INFO);
 }
 
+TEST_CASE("File+line overload - early exit when filtered") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    // Only allow errors; info should be filtered
+    Logger::set_level(LOG_ERROR);
+
+    LOG_INFO("Filtered fileline");
+
+    CHECK(out.str().empty());
+    CHECK(err.str().empty());
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
 TEST_CASE("Structured logging - early exit when below level") {
     std::ostringstream out;
     std::ostringstream err;
@@ -644,6 +676,7 @@ TEST_CASE("Structured logging to file logger") {
 struct FailingBuf : public std::streambuf {
     int overflow(int) override { return traits_type::eof(); }
 };
+
 
 TEST_CASE("Logger - catch path on stream exceptions (simple log)") {
     FailingBuf buf;
@@ -705,6 +738,7 @@ TEST_CASE("Logger - catch path on stream exceptions (structured)") {
     CHECK(err.find("Logging error:") != std::string::npos);
 }
 
+
 TEST_CASE("String-only wrappers for all levels") {
     std::ostringstream out;
     std::ostringstream err;
@@ -739,6 +773,36 @@ TEST_CASE("File+line overload uses custom formatter branch") {
 
     Logger::set_formatter(nullptr);
     Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("DefaultLogFormatter - Windows-style backslash basename extraction") {
+    DefaultLogFormatter formatter(TimestampFormat::NONE);
+    std::tm t = {};
+    const std::string res = formatter.format(LOG_INFO, "Backslash msg", t, "C\\dir\\file.cpp", 5);
+    CHECK(res.find("Backslash msg (file.cpp:5)") != std::string::npos);
+}
+
+TEST_CASE("Char* wrapper logs into file sink") {
+    namespace fs = std::filesystem;
+    fs::path temp_dir = fs::temp_directory_path() / "interlaced_charptr_file_sink";
+    fs::create_directories(temp_dir);
+    std::string log_filename = (temp_dir / "charptr.log").string();
+
+    Logger::set_file_logging(log_filename, 1024, 2);
+    Logger::set_level(LOG_DEBUG);
+
+    // Use the char* formatting wrapper which routes through file sink
+    Logger::info("file {}", 42);
+
+    Logger::set_file_logging(nullptr);
+
+    CHECK(fs::exists(log_filename));
+    std::ifstream f(log_filename);
+    std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    CHECK(content.find("file 42") != std::string::npos);
+
+    fs::remove_all(temp_dir);
     Logger::set_level(LOG_INFO);
 }
 
@@ -782,6 +846,23 @@ TEST_CASE("Structured with formatter and badbit clear path") {
     CHECK(out.good());
 
     Logger::set_formatter(nullptr);
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("format_message recursion - surplus args ignored after placeholders") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_DEBUG);
+
+    // One placeholder but two args: second arg should be ignored by formatter
+    Logger::info("one {}", 1, 999);
+
+    const std::string s = out.str();
+    CHECK(s.find("one 1") != std::string::npos);
+    CHECK(s.find("999") == std::string::npos);
+
     Logger::set_output_streams(std::cout, std::cerr);
     Logger::set_level(LOG_INFO);
 }
