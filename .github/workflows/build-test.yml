@@ -23,25 +23,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up CMake
-      uses: jwlawson/actions-setup-cmake@v1.14
-      with:
-        cmake-version: '3.22'
-
     - name: Set up build environment (Windows)
       if: matrix.platform.name == 'Windows'
-      run: |
-        choco install ninja
-        echo "CMAKE_GENERATOR=Ninja" >> $env:GITHUB_ENV
-
-    - name: Configure CMake
-      run: >
-        cmake -B ${{ matrix.platform.name == 'Windows' && 'build' || '_build' }}
-        -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_CXX_STANDARD=17
-        ${{ matrix.platform.name == 'Windows' && '-G Ninja' || '' }}
+      run: choco install make
 
     - name: Build
-      run: cmake --build ${{ matrix.platform.name == 'Windows' && 'build' || '_build' }} --config Release
-
-    # Test step removed: no unit tests in this repository.
+      run: make
