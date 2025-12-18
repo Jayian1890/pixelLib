@@ -370,4 +370,420 @@ TEST_CASE("Logging macros") {
     Logger::set_level(LOG_INFO);
 }
 
+TEST_CASE("log_level_to_string - unknown") {
+    // Cover default branch
+    CHECK(log_level_to_string(static_cast<LogLevel>(-1)) == "UNKNOWN");
+}
+
+TEST_CASE("DefaultLogFormatter - UNIX timestamp") {
+    DefaultLogFormatter formatter(TimestampFormat::UNIX);
+    std::tm time_info = {};
+    time_info.tm_year = 123;
+    time_info.tm_mon = 0;
+    time_info.tm_mday = 15;
+    time_info.tm_hour = 14;
+    time_info.tm_min = 30;
+    time_info.tm_sec = 45;
+
+    std::string result = formatter.format(LOG_INFO, "Unix style", time_info);
+    CHECK(result.find("[2023-01-15 14:30:45] [INFO] Unix style") != std::string::npos);
+}
+
+TEST_CASE("format_and_log_with_format_string - file/line pair") {
+    std::ostringstream output_buffer;
+    std::ostringstream error_buffer;
+    Logger::set_output_streams(output_buffer, error_buffer);
+    Logger::set_level(LOG_DEBUG);
+
+    // No placeholders, two args (const char*, int) -> treated as file/line
+    Logger::info("Pair path", "dummy.cpp", 7);
+
+    const std::string out = output_buffer.str();
+    CHECK(out.find("Pair path (dummy.cpp:7)") != std::string::npos);
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("format_and_log_with_format_string - odd args => simple message") {
+    std::ostringstream output_buffer;
+    std::ostringstream error_buffer;
+    Logger::set_output_streams(output_buffer, error_buffer);
+    Logger::set_level(LOG_DEBUG);
+
+    // Odd number of extra args should be ignored; logs simple message
+    Logger::info("Odd args test", "k1");
+
+    const std::string out = output_buffer.str();
+    CHECK(out.find("Odd args test") != std::string::npos);
+    CHECK(out.find("k1=") == std::string::npos);
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("format_and_log_with_format_string - placeholders with zero args") {
+    std::ostringstream output_buffer;
+    std::ostringstream error_buffer;
+    Logger::set_output_streams(output_buffer, error_buffer);
+    Logger::set_level(LOG_DEBUG);
+
+    // Contains "{}" but no args; braces should remain literally
+    Logger::info("Value {} remains {} with no args");
+
+    const std::string out = output_buffer.str();
+    CHECK(out.find("Value {} remains {} with no args") != std::string::npos);
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("Logger - char* wrappers for all levels") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_DEBUG);
+
+    Logger::debug("dbg {}", 1);
+    Logger::info("inf {}", 2);
+    Logger::warning("wrn {}", 3);
+    Logger::error("err {}", 4);
+
+    CHECK(out.str().find("dbg 1") != std::string::npos);
+    CHECK(out.str().find("inf 2") != std::string::npos);
+    CHECK(out.str().find("wrn 3") != std::string::npos);
+    CHECK(err.str().find("err 4") != std::string::npos);
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("Logger - explicit file/line overloads without macros") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_DEBUG);
+
+    Logger::debug(std::string("D msg"), __FILE__, 123);
+    Logger::info(std::string("I msg"), __FILE__, 124);
+    Logger::warning(std::string("W msg"), __FILE__, 125);
+    Logger::error(std::string("E msg"), __FILE__, 126);
+
+    const std::string o = out.str();
+    const std::string e = err.str();
+    CHECK(o.find("D msg") != std::string::npos);
+    CHECK(o.find("I msg") != std::string::npos);
+    CHECK(o.find("W msg") != std::string::npos);
+    CHECK(e.find("E msg") != std::string::npos);
+    CHECK(o.find("test_logging.cc:123") != std::string::npos);
+    CHECK(o.find("test_logging.cc:124") != std::string::npos);
+    CHECK(o.find("test_logging.cc:125") != std::string::npos);
+    CHECK(e.find("test_logging.cc:126") != std::string::npos);
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("RotatingFileLogger - time-based rotation immediate") {
+    namespace fs = std::filesystem;
+    fs::path temp_dir = fs::temp_directory_path() / "interlaced_test_time_rotation_immediate";
+    fs::create_directories(temp_dir);
+    std::string base_filename = (temp_dir / "instant.log").string();
+
+    {
+        // 0 hours interval => should rotate on first write
+        RotatingFileLogger logger(base_filename, std::chrono::hours(0), 3);
+        logger.write("first");
+        logger.write("second");
+    }
+
+    CHECK(fs::exists(base_filename + ".1"));
+
+    fs::remove_all(temp_dir);
+}
+
+TEST_CASE("RotatingFileLogger - write fallback when file cannot open") {
+    namespace fs = std::filesystem;
+    fs::path temp_dir = fs::temp_directory_path() / "interlaced_test_write_fallback";
+    fs::create_directories(temp_dir);
+
+    // Use a directory path as 'file' to force ofstream.open() failure
+    std::string bad_path = temp_dir.string();
+
+    // Capture std::cerr for fallback output
+    std::ostringstream cerr_buffer;
+    auto *old_cerr_buf = std::cerr.rdbuf(cerr_buffer.rdbuf());
+    {
+        RotatingFileLogger logger(bad_path, 1024, 2);
+        logger.write("Should go to cerr");
+    }
+    // Restore cerr
+    std::cerr.rdbuf(old_cerr_buf);
+
+    const std::string err = cerr_buffer.str();
+    CHECK(err.find("Failed to open log file: ") != std::string::npos);
+    CHECK(err.find("Should go to cerr") != std::string::npos);
+
+    fs::remove_all(temp_dir);
+}
+
+TEST_CASE("Logger - output stream recovery when badbit set (info)") {
+    std::ostringstream output_buffer;
+    std::ostringstream error_buffer;
+
+    Logger::set_output_streams(output_buffer, error_buffer);
+    Logger::set_level(LOG_DEBUG);
+
+    // Force bad state on output stream to exercise clear() path
+    output_buffer.setstate(std::ios::badbit);
+    Logger::info("Should still attempt write to bad stream");
+
+    // After logging, library clears the stream; good() should be true
+    CHECK(output_buffer.good());
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("Logger - error stream recovery when badbit set (error)") {
+    std::ostringstream output_buffer;
+    std::ostringstream error_buffer;
+
+    Logger::set_output_streams(output_buffer, error_buffer);
+    Logger::set_level(LOG_DEBUG);
+
+    error_buffer.setstate(std::ios::badbit);
+    Logger::error("Err path on bad stream");
+
+    CHECK(error_buffer.good());
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("format_and_log_with_format_string - treat as KV pairs") {
+    std::ostringstream output_buffer;
+    std::ostringstream error_buffer;
+    Logger::set_output_streams(output_buffer, error_buffer);
+    Logger::set_level(LOG_DEBUG);
+
+    // No placeholders, even number of args -> key/value formatting path
+    Logger::info("KV start", "a", 1, "b", 2);
+    const std::string out = output_buffer.str();
+    CHECK(out.find("KV start a=1 b=2") != std::string::npos);
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("Macros with file logger (file+line overload)") {
+    namespace fs = std::filesystem;
+    fs::path temp_dir = fs::temp_directory_path() / "interlaced_test_macro_file_logger";
+    fs::create_directories(temp_dir);
+    std::string log_filename = (temp_dir / "macro.log").string();
+
+    Logger::set_file_logging(log_filename, 1024, 2);
+    Logger::set_level(LOG_DEBUG);
+
+    // These macros call the (message,file,line) overload; ensure file sink path is used
+    LOG_INFO("Macro to file");
+    LOG_WARNING("Macro warn to file");
+    LOG_ERROR("Macro err to file");
+
+    Logger::set_file_logging(nullptr);
+
+    CHECK(fs::exists(log_filename));
+    std::ifstream file(log_filename);
+    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    CHECK(content.find("Macro to file") != std::string::npos);
+    CHECK(content.find("Macro warn to file") != std::string::npos);
+    CHECK(content.find("Macro err to file") != std::string::npos);
+
+    fs::remove_all(temp_dir);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("Structured logging - early exit when below level") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_INFO); // filter out debug
+
+    // Will route to structured overload (even number of args, no placeholders)
+    Logger::debug("Early", "k", 1);
+    CHECK(out.str().empty());
+    CHECK(err.str().empty());
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("Structured logging to file logger") {
+    namespace fs = std::filesystem;
+    fs::path temp_dir = fs::temp_directory_path() / "interlaced_structured_file";
+    fs::create_directories(temp_dir);
+    std::string log_filename = (temp_dir / "kvfile.log").string();
+
+    Logger::set_file_logging(log_filename, 1024, 2);
+    Logger::set_level(LOG_DEBUG);
+
+    Logger::info("KV file", "a", 10, "b", 20);
+
+    Logger::set_file_logging(nullptr);
+    CHECK(fs::exists(log_filename));
+
+    std::ifstream f(log_filename);
+    std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    CHECK(content.find("KV file a=10 b=20") != std::string::npos);
+
+    fs::remove_all(temp_dir);
+    Logger::set_level(LOG_INFO);
+}
+
+// Custom failing streambuf to trigger exceptions during stream operations
+struct FailingBuf : public std::streambuf {
+    int overflow(int) override { return traits_type::eof(); }
+};
+
+TEST_CASE("Logger - catch path on stream exceptions (simple log)") {
+    FailingBuf buf;
+    std::ostream failing(&buf);
+    failing.exceptions(std::ios::failbit | std::ios::badbit);
+
+    std::ostringstream cerr_capture;
+    auto *old = std::cerr.rdbuf(cerr_capture.rdbuf());
+
+    Logger::set_output_streams(failing, failing);
+    Logger::set_level(LOG_DEBUG);
+    Logger::info("Trigger exception path");
+
+    std::cerr.rdbuf(old);
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+
+    const std::string err = cerr_capture.str();
+    CHECK(err.find("Logging error:") != std::string::npos);
+}
+
+TEST_CASE("Logger - catch path on stream exceptions (file+line)") {
+    FailingBuf buf;
+    std::ostream failing(&buf);
+    failing.exceptions(std::ios::failbit | std::ios::badbit);
+
+    std::ostringstream cerr_capture;
+    auto *old = std::cerr.rdbuf(cerr_capture.rdbuf());
+
+    Logger::set_output_streams(failing, failing);
+    Logger::set_level(LOG_DEBUG);
+    Logger::info(std::string("With file"), __FILE__, 321);
+
+    std::cerr.rdbuf(old);
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+
+    const std::string err = cerr_capture.str();
+    CHECK(err.find("Logging error:") != std::string::npos);
+}
+
+TEST_CASE("Logger - catch path on stream exceptions (structured)") {
+    FailingBuf buf;
+    std::ostream failing(&buf);
+    failing.exceptions(std::ios::failbit | std::ios::badbit);
+
+    std::ostringstream cerr_capture;
+    auto *old = std::cerr.rdbuf(cerr_capture.rdbuf());
+
+    Logger::set_output_streams(failing, failing);
+    Logger::set_level(LOG_DEBUG);
+    Logger::info("Struct path", "k", 1);
+
+    std::cerr.rdbuf(old);
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+
+    const std::string err = cerr_capture.str();
+    CHECK(err.find("Logging error:") != std::string::npos);
+}
+
+TEST_CASE("String-only wrappers for all levels") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_DEBUG);
+
+    Logger::debug(std::string("sdbg"));
+    Logger::info(std::string("sinf"));
+    Logger::warning(std::string("swrn"));
+    Logger::error(std::string("serr"));
+
+    CHECK(out.str().find("sdbg") != std::string::npos);
+    CHECK(out.str().find("sinf") != std::string::npos);
+    CHECK(out.str().find("swrn") != std::string::npos);
+    CHECK(err.str().find("serr") != std::string::npos);
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("File+line overload uses custom formatter branch") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_DEBUG);
+
+    auto fmt = std::make_unique<DefaultLogFormatter>(TimestampFormat::NONE, "FMT");
+    Logger::set_formatter(std::move(fmt));
+    Logger::info(std::string("Fmt fileline"), __FILE__, 4321);
+
+    CHECK(out.str().find("FMT [INFO] Fmt fileline") != std::string::npos);
+
+    Logger::set_formatter(nullptr);
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("File+line overload - clear() path when badbit set") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_DEBUG);
+
+    out.setstate(std::ios::badbit);
+    Logger::warning(std::string("badbit fileline"), __FILE__, 111);
+    CHECK(out.good());
+
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
+TEST_CASE("Structured explicit early exit via log(level, msg, kv)") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_INFO);
+
+    Logger::log(LOG_DEBUG, std::string("struct-early"), "k", 1);
+    CHECK(out.str().empty());
+    CHECK(err.str().empty());
+
+    Logger::set_output_streams(std::cout, std::cerr);
+}
+
+TEST_CASE("Structured with formatter and badbit clear path") {
+    std::ostringstream out;
+    std::ostringstream err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_DEBUG);
+    auto fmt = std::make_unique<DefaultLogFormatter>(TimestampFormat::NONE, "S");
+    Logger::set_formatter(std::move(fmt));
+
+    out.setstate(std::ios::badbit);
+    Logger::log(LOG_INFO, std::string("struct-clear"), "a", 1);
+    CHECK(out.good());
+
+    Logger::set_formatter(nullptr);
+    Logger::set_output_streams(std::cout, std::cerr);
+    Logger::set_level(LOG_INFO);
+}
+
 } // TEST_SUITE

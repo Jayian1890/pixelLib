@@ -59,6 +59,10 @@ third_party/doctest/doctest.h:
 	@mkdir -p third_party/doctest
 	@./tools/get_doctest.sh
 
+# Explicit target to fetch doctest header
+doctest: third_party/doctest/doctest.h
+	@echo "doctest header present at third_party/doctest/doctest.h"
+
 test: $(TEST_BIN)
 	@echo "Built test binary: $(TEST_BIN)"
 
@@ -76,6 +80,8 @@ ifeq ($(IS_CLANG),1)
 	@$(LLVM_PROFDATA) merge -sparse $(BIN_DIR)/*.profraw -o $(COVERAGE_DIR)/coverage.profdata
 	@echo "Exporting lcov -> $(COVERAGE_DIR)/lcov.info";
 	@$(LLVM_COV) export --format=lcov --ignore-filename-regex="third_party/.*" $(TEST_BIN) -instr-profile=$(COVERAGE_DIR)/coverage.profdata > $(COVERAGE_DIR)/lcov.info
+	@sed "s|SF:$(CURDIR)/|SF:|g" $(COVERAGE_DIR)/lcov.info > $(COVERAGE_DIR)/lcov.relative.info
+	@echo "Also created: $(COVERAGE_DIR)/lcov.relative.info (workspace-relative paths)";
 	@echo "Generating HTML -> $(COVERAGE_DIR)/html";
 	@$(LLVM_COV) show --ignore-filename-regex="third_party/.*" $(TEST_BIN) -instr-profile=$(COVERAGE_DIR)/coverage.profdata -format=html -output-dir=$(COVERAGE_DIR)/html -show-expansions -show-line-counts-or-regions
 	@echo "Open: $(COVERAGE_DIR)/html/index.html"
@@ -86,6 +92,11 @@ else ifeq ($(IS_GCC),1)
 else
 	@echo "Coverage not supported for current compiler"
 endif
+
+.PHONY: lcov-rel
+lcov-rel: coverage
+	@sed "s|SF:$(CURDIR)/|SF:|g" $(COVERAGE_DIR)/lcov.info > $(COVERAGE_DIR)/lcov.relative.info
+	@echo "Generated $(COVERAGE_DIR)/lcov.relative.info"
 
 clean:
 	rm -rf $(BIN_DIR) $(COVERAGE_DIR)

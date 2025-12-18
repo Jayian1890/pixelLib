@@ -65,6 +65,15 @@ make coverage
 
 Coverage reports are generated in the `build/coverage` directory.
 
+Note for VS Code: some coverage viewers (e.g., the "Coverage Gutters" extension) prefer workspace-relative paths in LCOV files. The Makefile now emits a workspace-relative LCOV at `build/coverage/lcov.relative.info` in addition to `build/coverage/lcov.info`. If your coverage extension cannot map lines to source files, run:
+
+```bash
+make coverage    # generates lcov.info
+make lcov-rel    # creates build/coverage/lcov.relative.info with workspace-relative paths
+```
+
+In VS Code use the Coverage Gutters command palette ("Coverage Gutters: Display Coverage") and select `build/coverage/lcov.relative.info` if needed.
+
 ## Usage
 
 Include the header files in your project:
