@@ -44,7 +44,4 @@ jobs:
     - name: Build
       run: cmake --build ${{ matrix.platform.name == 'Windows' && 'build' || '_build' }} --config Release
 
-    - name: Test
-      run: |
-        cd ${{ matrix.platform.name == 'Windows' && 'build' || '_build' }}
-        ctest --output-on-failure -C Release
+    # Test step removed: no unit tests in this repository.

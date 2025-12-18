@@ -16,10 +16,7 @@ The "why" behind the header-only design is to simplify integration without linki
 - Compile commands are exported for IDE integration.
 
 ## Testing
-- Tests are in `tests/` subdirectory with `CMakeLists.txt`.
-- Tests use GoogleTest and include `<gtest/gtest.h>`.
-- Enable testing with `enable_testing()` and add tests via `add_subdirectory(tests)`.
-- Run tests: `ctest` in the build directory after building.
+This repository does not include unit tests in this branch.
 
 ## Developer Workflows
 - CI/CD via GitHub Actions in `.github/workflows/build-test.yml` (assumes standard build and test steps).

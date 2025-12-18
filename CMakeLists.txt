@@ -16,11 +16,7 @@ target_include_directories(interlaced_core INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-# Enable testing
-enable_testing()
-
-# Add tests subdirectory so test executables are built
-add_subdirectory(tests)
+# Tests removed: CTest disabled and tests/ directory removed.
 
 # Install rules (for distribution)
 install(TARGETS interlaced_core

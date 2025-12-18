@@ -49,25 +49,9 @@ cmake -S . -B build
 cmake --build build --config Debug
 ```
 
-### Running Tests
+### Testing
 
-The project includes comprehensive unit tests. Example commands:
-
-```bash
-# Run all tests (verbose)
-ctest --test-dir build --output-on-failure -V
-
-# Run a specific test executable
-./build/tests/logging_test
-
-# Run another test executable
-./build/tests/json_test
-
-# Or filter tests via ctest
-ctest --test-dir build -R logging_test -V
-```
-
-**Note:** All tests pass locally (25/25) after recent fixes to the logging implementation.
+This repository does not include unit tests in this branch. Tests were removed; re-add them as needed.
 
 ## Usage
 
@@ -166,12 +150,7 @@ Platform-specific implementations are included where necessary to ensure consist
 
 ## Testing
 
-The project includes a comprehensive test suite that validates functionality across all modules:
-
-```bash
-cd build
-ctest
-```
+This repository does not include unit tests in this branch.
 
 ## Contributing
 
