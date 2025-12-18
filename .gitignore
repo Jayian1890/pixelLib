@@ -4,7 +4,7 @@ build/_deps/
 cmake-build-*/
 
 # IDE files
-.continue
+.continue/
 .zed/
 .cache/
 .vscode/

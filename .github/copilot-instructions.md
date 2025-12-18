@@ -36,3 +36,8 @@ The "why" behind the header-only design is to simplify integration without linki
 - External dependency: GTest for testing.
 - No cross-component communication beyond header includes; each module is self-contained.
 - Installation: `cmake --install build` installs headers to `include/`.
+
+## Rules & Restrictions
+- No third-party dependencies beyond GTest.
+- Maintain header-only design; no compiled binaries.
+- Follow C++17 standard; no newer features.
