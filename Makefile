@@ -79,16 +79,16 @@ ifeq ($(IS_CLANG),1)
 	@echo "Merging raw profiles -> $(COVERAGE_DIR)/coverage.profdata";
 	@$(LLVM_PROFDATA) merge -sparse $(BIN_DIR)/*.profraw -o $(COVERAGE_DIR)/coverage.profdata
 	@echo "Exporting lcov -> $(COVERAGE_DIR)/lcov.info";
-	@$(LLVM_COV) export --format=lcov --ignore-filename-regex="third_party/.*" $(TEST_BIN) -instr-profile=$(COVERAGE_DIR)/coverage.profdata > $(COVERAGE_DIR)/lcov.info
+	@$(LLVM_COV) export --format=lcov --ignore-filename-regex="(third_party/.*|tests/.*)" $(TEST_BIN) -instr-profile=$(COVERAGE_DIR)/coverage.profdata > $(COVERAGE_DIR)/lcov.info
 	@sed "s|SF:$(CURDIR)/|SF:|g" $(COVERAGE_DIR)/lcov.info > $(COVERAGE_DIR)/lcov.relative.info
 	@echo "Also created: $(COVERAGE_DIR)/lcov.relative.info (workspace-relative paths)";
 	@echo "Generating HTML -> $(COVERAGE_DIR)/html";
-	@$(LLVM_COV) show --ignore-filename-regex="third_party/.*" $(TEST_BIN) -instr-profile=$(COVERAGE_DIR)/coverage.profdata -format=html -output-dir=$(COVERAGE_DIR)/html -show-expansions -show-line-counts-or-regions
+	@$(LLVM_COV) show --ignore-filename-regex="(third_party/.*|tests/.*)" $(TEST_BIN) -instr-profile=$(COVERAGE_DIR)/coverage.profdata -format=html -output-dir=$(COVERAGE_DIR)/html -show-expansions -show-line-counts-or-regions
 	@echo "Open: $(COVERAGE_DIR)/html/index.html"
 else ifeq ($(IS_GCC),1)
 	@mkdir -p $(COVERAGE_DIR)/html
 	@echo "GCC coverage: generating HTML with gcovr (if available)"
-	@which gcovr >/dev/null 2>&1 && gcovr --html-details $(COVERAGE_DIR)/html/index.html --exclude 'third_party/.*' || echo "gcovr not found; install it to generate GCC coverage reports"
+	@which gcovr >/dev/null 2>&1 && gcovr --html-details $(COVERAGE_DIR)/html/index.html --exclude 'third_party/.*' --exclude 'tests/.*' || echo "gcovr not found; install it to generate GCC coverage reports"
 else
 	@echo "Coverage not supported for current compiler"
 endif
