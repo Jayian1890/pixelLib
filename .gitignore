@@ -55,3 +55,4 @@ test_log*
 .clangd/
 compile_commands.json
 cmake_output.txt
+Testing/Temporary/CTestCostData.txt
