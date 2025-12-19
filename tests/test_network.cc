@@ -1,9 +1,20 @@
 #include "doctest.h"
 #include "interlaced_core/network.hpp"
+#include <filesystem>
 #include <fstream>
 #include <cstdio> // for std::remove
 #include <thread>
 #include <cstring> // for memset
+
+// Platform-specific socket utilities
+#ifdef _WIN32
+// WinSock headers are included by interlaced_core/network.hpp
+#define CLOSE_SOCKET(s) closesocket(s)
+#define SOCKOPT_CAST(opt) reinterpret_cast<const char*>(opt)
+#else
+#define CLOSE_SOCKET(s) close(s)
+#define SOCKOPT_CAST(opt) (opt)
+#endif
 
 using namespace interlaced::core::network;
 
@@ -531,7 +542,7 @@ static int run_test_http_server(const std::string &response, int &out_port, bool
     if (listenfd < 0) return -1;
 
     int opt = 1;
-    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, SOCKOPT_CAST(&opt), sizeof(opt));
 
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -540,20 +551,20 @@ static int run_test_http_server(const std::string &response, int &out_port, bool
     addr.sin_port = 0; // ephemeral
 
     if (bind(listenfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        close(listenfd);
+        CLOSE_SOCKET(listenfd);
         return -1;
     }
 
     socklen_t len = sizeof(addr);
     if (getsockname(listenfd, (struct sockaddr*)&addr, &len) < 0) {
-        close(listenfd);
+        CLOSE_SOCKET(listenfd);
         return -1;
     }
 
     out_port = ntohs(addr.sin_port);
 
     if (listen(listenfd, 1) < 0) {
-        close(listenfd);
+        CLOSE_SOCKET(listenfd);
         return -1;
     }
 
@@ -573,9 +584,9 @@ static int run_test_http_server(const std::string &response, int &out_port, bool
             if (!body.empty()) {
                 send(conn, body.c_str(), body.size(), 0);
             }
-            close(conn);
+            CLOSE_SOCKET(conn);
         }
-        close(listenfd);
+        CLOSE_SOCKET(listenfd);
     }).detach();
 
     return 0;
@@ -645,7 +656,7 @@ TEST_CASE("download_file - connect to closed port fails") {
 TEST_CASE("download_file - server closes before send (triggers send failure)") {
     // Server that accepts and immediately closes
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    int opt = 1; setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    int opt = 1; setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, SOCKOPT_CAST(&opt), sizeof(opt));
     struct sockaddr_in addr; memset(&addr,0,sizeof(addr)); addr.sin_family = AF_INET; addr.sin_addr.s_addr=htonl(INADDR_LOOPBACK); addr.sin_port=0;
     bind(listenfd,(struct sockaddr*)&addr,sizeof(addr)); socklen_t len=sizeof(addr); getsockname(listenfd,(struct sockaddr*)&addr,&len);
     int port = ntohs(addr.sin_port);
@@ -653,9 +664,9 @@ TEST_CASE("download_file - server closes before send (triggers send failure)") {
     std::thread([listenfd]() {
         int conn = accept(listenfd,nullptr,nullptr);
         if (conn>=0) {
-            close(conn);
+            CLOSE_SOCKET(conn);
         }
-        close(listenfd);
+        CLOSE_SOCKET(listenfd);
     }).detach();
 
     std::string url = "http://127.0.0.1:" + std::to_string(port) + "/close";
@@ -692,7 +703,7 @@ TEST_CASE("download_file - URL without path (host_end == npos)") {
 TEST_CASE("download_file - split header and body across recv calls") {
     // Server that sends headers first, then body after a short delay
     int listenfd = socket(AF_INET, SOCK_STREAM, 0);
-    int opt = 1; setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    int opt = 1; setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, SOCKOPT_CAST(&opt), sizeof(opt));
     struct sockaddr_in addr; memset(&addr,0,sizeof(addr)); addr.sin_family = AF_INET; addr.sin_addr.s_addr=htonl(INADDR_LOOPBACK); addr.sin_port=0;
     bind(listenfd,(struct sockaddr*)&addr,sizeof(addr)); socklen_t len=sizeof(addr); getsockname(listenfd,(struct sockaddr*)&addr,&len);
     int port = ntohs(addr.sin_port);
@@ -709,9 +720,9 @@ TEST_CASE("download_file - split header and body across recv calls") {
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
             std::string body = "DelayedBody\n";
             send(conn, body.c_str(), body.size(), 0);
-            close(conn);
+            CLOSE_SOCKET(conn);
         }
-        close(listenfd);
+        CLOSE_SOCKET(listenfd);
     }).detach();
 
     std::string url = "http://127.0.0.1:" + std::to_string(port) + "/split";
