@@ -10,7 +10,7 @@
 namespace fs = std::filesystem;
 using namespace interlaced::core::logging;
 
-TEST_SUITE("logging module") {
+TEST_SUITE("interlaced_core_logging") {
 
 TEST_CASE("log_level_to_string") {
     CHECK(log_level_to_string(LOG_DEBUG) == "DEBUG");
