@@ -12,6 +12,11 @@ IS_GCC := $(if $(findstring gcc,$(CXX_VERSION)),1,$(IS_GCC))
 
 # Detect OS
 UNAME_S := $(shell uname -s 2>/dev/null)
+ifeq ($(OS),Windows_NT)
+  IS_WINDOWS := 1
+else
+  IS_WINDOWS := 0
+endif
 
 # Set coverage flags based on compiler
 ifeq ($(IS_CLANG),1)
@@ -46,6 +51,11 @@ ifeq ($(IS_GCC),1)
   ifeq ($(shell test $(GCC_VERSION) -lt 9 2>/dev/null && echo 1),1)
     LIBS += -lstdc++fs
   endif
+endif
+
+# Add Windows socket library if on Windows
+ifeq ($(IS_WINDOWS),1)
+  LIBS += -lws2_32
 endif
 
 TEST_DIR := tests
