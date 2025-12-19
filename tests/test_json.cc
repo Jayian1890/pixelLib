@@ -167,4 +167,74 @@ TEST_CASE("mutation_and_accessors") {
     CHECK(s.find("\"newkey\"") != std::string::npos);
 }
 
+TEST_CASE("stringify_empty_containers_and_escape_control") {
+    JSON empty_arr = JSON::array({});
+    CHECK(empty_arr.stringify() == "[]");
+
+    JSON empty_obj = JSON::object({});
+    CHECK(empty_obj.stringify() == "{}");
+
+    // Control characters should be escaped using \u00XX
+    JSON ctrl = JSON(std::string("a\x01b"));
+    std::string s = ctrl.stringify();
+    CHECK(s.find("\\u00") != std::string::npos);
+}
+
+TEST_CASE("unicode_codepoint_edge_cases") {
+    // BMP small codepoint
+    JSON a = JSON::parse_or_throw("\"\\u0041\"");
+    CHECK(a.as_string() == "A");
+
+    // 2-byte UTF codepoint -  or  (DEL) - still should parse
+    JSON b = JSON::parse_or_throw("\"\\u07FF\"");
+    CHECK(b.as_string().size() >= 1);
+
+    // Surrogate pair already tested earlier (grin)
+}
+
+TEST_CASE("parse_failure_variations") {
+    JSON out; JsonError err;
+    CHECK(JSON::parse("-x", out, &err) == false);
+    CHECK(err.message.size() > 0);
+
+    CHECK(JSON::parse("truX", out, &err) == false);
+    CHECK(err.message.size() > 0);
+
+    CHECK(JSON::parse("@", out, &err) == false);
+    CHECK(err.message.size() > 0);
+}
+
+TEST_CASE("parse_number_exponent_plus") {
+    JSON n = JSON::parse_or_throw("1e+2");
+    CHECK(n.as_number().to_double() == doctest::Approx(100.0));
+}
+
+TEST_CASE("as_type_exceptions") {
+    JSON x = JSON::parse_or_throw("true");
+    CHECK(x.is_bool());
+    CHECK_THROWS_AS(x.as_number(), std::logic_error);
+    CHECK_THROWS_AS(x.as_string(), std::logic_error);
+    CHECK_THROWS_AS(x.as_array(), std::logic_error);
+    CHECK_THROWS_AS(x.as_object(), std::logic_error);
+}
+
+TEST_CASE("number_constructor_and_behavior") {
+    JSON::Number nnum{std::string("7")};
+    JSON jn(nnum);
+    CHECK(jn.is_number());
+    CHECK(jn.as_number().to_int64() == 7);
+}
+
+TEST_CASE("string_escape_variants") {
+    JSON s = JSON::parse_or_throw("\"\\b\\f\\r\\t\\/\\\\\"");
+    std::string val = s.as_string();
+    // Should contain the control characters
+    CHECK(val.find('\b') != std::string::npos);
+    CHECK(val.find('\f') != std::string::npos);
+    CHECK(val.find('\r') != std::string::npos);
+    CHECK(val.find('\t') != std::string::npos);
+    CHECK(val.find('/') != std::string::npos);
+    CHECK(val.find('\\') != std::string::npos);
+}
+
 } // TEST_SUITE

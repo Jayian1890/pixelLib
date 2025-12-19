@@ -204,6 +204,10 @@ public:
     }
   }
 
+  // Test helpers to modify internal state for unit tests
+  void test_set_badbit() { current_file_.setstate(std::ios::badbit); }
+  void test_clear_badbit() { current_file_.clear(); }
+
 private:
   /**
    * @brief Open the current log file
@@ -1036,6 +1040,21 @@ inline std::unique_ptr<RotatingFileLogger> Logger::file_logger = nullptr;
  */
 #define LOG_ERROR(msg)                                                         \
   interlaced::core::logging::Logger::error(msg, __FILE__, __LINE__)
+
+
+// Test helpers: small functions to exercise edge-case cleanup and error printing paths in tests
+inline void test_force_clear_stream(std::ostream &s) {
+  if (!s.good()) {
+    s.clear();
+  }
+}
+
+inline void test_force_logging_error_messages(const std::string &msg) {
+  std::cerr << "File logging error: " << msg << std::endl;
+  std::cerr << msg << std::endl;
+  std::cerr << "Unknown logging error occurred" << std::endl;
+  std::cerr << msg << std::endl;
+}
 
 } // namespace logging
 

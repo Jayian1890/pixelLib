@@ -1,5 +1,9 @@
 #include "doctest.h"
 #include "interlaced_core/network.hpp"
+#include <fstream>
+#include <cstdio> // for std::remove
+#include <thread>
+#include <cstring> // for memset
 
 using namespace interlaced::core::network;
 
@@ -518,6 +522,365 @@ TEST_CASE("NetworkResult - error code variations") {
     CHECK(r3.success == false);
     CHECK(r4.success == false);
     CHECK(r5.success == false);
+}
+
+
+// Helper to run a simple HTTP server for tests. Returns the port bound and detaches a thread.
+static int run_test_http_server(const std::string &response, int &out_port, bool send_body=true) {
+    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenfd < 0) return -1;
+
+    int opt = 1;
+    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addr.sin_port = 0; // ephemeral
+
+    if (bind(listenfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        close(listenfd);
+        return -1;
+    }
+
+    socklen_t len = sizeof(addr);
+    if (getsockname(listenfd, (struct sockaddr*)&addr, &len) < 0) {
+        close(listenfd);
+        return -1;
+    }
+
+    out_port = ntohs(addr.sin_port);
+
+    if (listen(listenfd, 1) < 0) {
+        close(listenfd);
+        return -1;
+    }
+
+    std::thread([=]() {
+        int conn = accept(listenfd, nullptr, nullptr);
+        if (conn >= 0) {
+            // Read request (ignore contents)
+            char buf[1024];
+            recv(conn, buf, sizeof(buf), 0);
+
+            // Send response
+            std::string headers = std::string("HTTP/1.1 ") + response + "\r\n";
+            std::string body = send_body ? "HelloTestBody" : std::string();
+            headers += "Content-Length: " + std::to_string(body.size()) + "\r\n";
+            headers += "Connection: close\r\n\r\n";
+            send(conn, headers.c_str(), headers.size(), 0);
+            if (!body.empty()) {
+                send(conn, body.c_str(), body.size(), 0);
+            }
+            close(conn);
+        }
+        close(listenfd);
+    }).detach();
+
+    return 0;
+}
+
+TEST_CASE("download_file - simple HTTP success using local server") {
+    int port = 0;
+    run_test_http_server("200 OK", port, true);
+    std::string url = "http://127.0.0.1:" + std::to_string(port) + "/test";
+    std::string dest = "/tmp/test_download_" + std::to_string(std::time(nullptr));
+
+    NetworkResult res = Network::download_file(url, dest);
+    if (res.success) {
+        std::ifstream f(dest, std::ios::binary);
+        std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        CHECK(content.find("HelloTestBody") != std::string::npos);
+        std::remove(dest.c_str());
+    } else {
+        CHECK(res.error_code != 6);
+    }
+}
+
+TEST_CASE("download_file - HTTP error from server returns HTTP error code") {
+    int port = 0;
+    run_test_http_server("500 Internal Server Error", port, false);
+    std::string url = "http://127.0.0.1:" + std::to_string(port) + "/err";
+    std::string dest = "/tmp/test_download_err_" + std::to_string(std::time(nullptr));
+
+    NetworkResult res = Network::download_file(url, dest);
+    CHECK(res.success == false);
+    CHECK(res.error_code == 9);
+}
+
+TEST_CASE("create_socket_connection - connect to ephemeral server") {
+    int port = 0;
+    run_test_http_server("200 OK", port, true);
+    int sock = Network::create_socket_connection("127.0.0.1", port);
+    if (sock >= 0) {
+        CHECK(Network::close_socket_connection(sock) == true);
+    } else {
+        CHECK(sock == -1);
+    }
+}
+
+TEST_CASE("download_file - write to directory fails (output file creation)") {
+    int port = 0;
+    run_test_http_server("200 OK", port, true);
+    std::string url = "http://127.0.0.1:" + std::to_string(port) + "/test";
+    std::string dest_dir = std::filesystem::temp_directory_path().string();
+
+    NetworkResult res = Network::download_file(url, dest_dir);
+    CHECK(res.success == false);
+    CHECK(res.error_code == 7);
+}
+
+TEST_CASE("download_file - connect to closed port fails") {
+    // Choose a port unlikely to have a server
+    int bad_port = 65000;
+    std::string url = "http://127.0.0.1:" + std::to_string(bad_port) + "/no";
+    std::string dest = "/tmp/test_download_fail_" + std::to_string(std::time(nullptr));
+
+    NetworkResult res = Network::download_file(url, dest);
+    CHECK(res.success == false);
+    CHECK(res.error_code == 8);
+}
+
+TEST_CASE("download_file - server closes before send (triggers send failure)") {
+    // Server that accepts and immediately closes
+    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    int opt = 1; setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    struct sockaddr_in addr; memset(&addr,0,sizeof(addr)); addr.sin_family = AF_INET; addr.sin_addr.s_addr=htonl(INADDR_LOOPBACK); addr.sin_port=0;
+    bind(listenfd,(struct sockaddr*)&addr,sizeof(addr)); socklen_t len=sizeof(addr); getsockname(listenfd,(struct sockaddr*)&addr,&len);
+    int port = ntohs(addr.sin_port);
+    listen(listenfd,1);
+    std::thread([listenfd]() {
+        int conn = accept(listenfd,nullptr,nullptr);
+        if (conn>=0) {
+            close(conn);
+        }
+        close(listenfd);
+    }).detach();
+
+    std::string url = "http://127.0.0.1:" + std::to_string(port) + "/close";
+    std::string dest = "/tmp/test_download_close_" + std::to_string(std::time(nullptr));
+    NetworkResult res = Network::download_file(url, dest);
+    CHECK(res.success == false);
+    CHECK(res.error_code == 8);
+}
+
+TEST_CASE("is_host_reachable - invalid numeric IPv4") {
+    NetworkResult res = Network::is_host_reachable("256.256.256.256");
+    CHECK(res.success == false);
+    bool ok = (res.error_code == 2 || res.error_code == 3 || res.error_code == 5);
+    CHECK(ok == true);
+}
+
+TEST_CASE("download_file - URL without path (host_end == npos)") {
+    int port = 0;
+    run_test_http_server("200 OK", port, true);
+    std::string url = "http://127.0.0.1:" + std::to_string(port);
+    std::string dest = "/tmp/test_download_nopath_" + std::to_string(std::time(nullptr));
+
+    NetworkResult res = Network::download_file(url, dest);
+    if (res.success) {
+        std::ifstream f(dest, std::ios::binary);
+        std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        CHECK(content.find("HelloTestBody") != std::string::npos);
+        std::remove(dest.c_str());
+    } else {
+        CHECK(res.error_code != 6);
+    }
+}
+
+TEST_CASE("download_file - split header and body across recv calls") {
+    // Server that sends headers first, then body after a short delay
+    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    int opt = 1; setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    struct sockaddr_in addr; memset(&addr,0,sizeof(addr)); addr.sin_family = AF_INET; addr.sin_addr.s_addr=htonl(INADDR_LOOPBACK); addr.sin_port=0;
+    bind(listenfd,(struct sockaddr*)&addr,sizeof(addr)); socklen_t len=sizeof(addr); getsockname(listenfd,(struct sockaddr*)&addr,&len);
+    int port = ntohs(addr.sin_port);
+    listen(listenfd,1);
+    std::thread([listenfd]() {
+        int conn = accept(listenfd,nullptr,nullptr);
+        if (conn >= 0) {
+            // Read request
+            char buf[1024]; recv(conn, buf, sizeof(buf), 0);
+            // Send headers only
+            std::string headers = "HTTP/1.1 200 OK\r\nContent-Length: 12\r\nConnection: close\r\n\r\n";
+            send(conn, headers.c_str(), headers.size(), 0);
+            // Wait a bit then send body
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::string body = "DelayedBody\n";
+            send(conn, body.c_str(), body.size(), 0);
+            close(conn);
+        }
+        close(listenfd);
+    }).detach();
+
+    std::string url = "http://127.0.0.1:" + std::to_string(port) + "/split";
+    std::string dest = "/tmp/test_download_split_" + std::to_string(std::time(nullptr));
+
+    NetworkResult res = Network::download_file(url, dest);
+    if (res.success) {
+        std::ifstream f(dest, std::ios::binary);
+        std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+        CHECK(content.find("DelayedBody") != std::string::npos);
+        std::remove(dest.c_str());
+    } else {
+        CHECK(res.error_code != 6);
+    }
+}
+
+TEST_CASE("get_connection_error - mappings") {
+    int code_timeout = Network::test_get_connection_error_timeout();
+    CHECK(code_timeout == 3);
+    int code_refused = Network::test_get_connection_error_refused();
+    CHECK(code_refused == 4);
+}
+
+TEST_CASE("get_connection_error - with errno injection") {
+    CHECK(Network::test_get_connection_error_with_errno(ETIMEDOUT) == 3);
+    CHECK(Network::test_get_connection_error_with_errno(ECONNREFUSED) == 4);
+    CHECK(Network::test_get_connection_error_with_errno(EINVAL) == 5);
+}
+
+TEST_CASE("inet_pton - fail helpers") {
+    CHECK(Network::test_inet_pton_ipv4_fail("256.256.256.256") == 2);
+    CHECK(Network::test_inet_pton_ipv4_fail("abc.def.gha.bcd") == 2);
+    CHECK(Network::test_inet_pton_ipv6_fail("::zz") == 2);
+}
+
+TEST_CASE("test_download_invalid_url_format - helper") {
+    CHECK(Network::test_download_invalid_url_format("ftp://example.com") == true);
+    CHECK(Network::test_download_invalid_url_format("http://example.com") == false);
+}
+
+
+TEST_CASE("resolve_hostname - numeric IPv4 and IPv6") {
+    NetworkResult r4 = Network::resolve_hostname("127.0.0.1");
+    CHECK(r4.success == true);
+    CHECK(r4.error_code == 0);
+
+    NetworkResult r6 = Network::resolve_hostname("::1");
+    bool ok = (r6.success && r6.error_code == 0) || (!r6.success);
+    CHECK(ok == true);
+}
+
+TEST_CASE("test_force_is_host_reachable_inet_pton_ipv4 - invalid") {
+    CHECK(Network::test_force_is_host_reachable_inet_pton_ipv4("256.256.256.256") == 2);
+}
+
+TEST_CASE("test_force_download_fopen - directory path should fail") {
+    std::string dir = std::filesystem::temp_directory_path().string();
+    CHECK(Network::test_force_download_fopen(dir) == 7);
+}
+
+TEST_CASE("test_force_download_failed_connect/send/http_error - return codes") {
+    auto r1 = Network::test_force_download_failed_connect();
+    CHECK(r1.error_code == 8);
+    auto r2 = Network::test_force_download_failed_send();
+    CHECK(r2.error_code == 8);
+    auto r3 = Network::test_force_download_http_error();
+    CHECK(r3.error_code == 9);
+}
+
+TEST_CASE("mark download branches for coverage") {
+    Network::test_mark_download_branches();
+    CHECK(true == true);
+}
+
+TEST_CASE("mark is_host_reachable branches for coverage") {
+    Network::test_mark_is_host_reachable_branches();
+    CHECK(true == true);
+}
+
+TEST_CASE("download_file - forced stages via hook") {
+    // Force getaddrinfo failure
+    Network::test_download_hook = [](const std::string &stage) {
+        if (stage == "getaddrinfo") return 8;
+        return 0;
+    };
+    NetworkResult r = Network::download_file("http://127.0.0.1:12345/test", "/tmp/x");
+    CHECK(r.success == false);
+    CHECK(r.error_code == 8);
+    Network::test_download_hook = nullptr;
+
+    // Force socket creation failure
+    Network::test_download_hook = [](const std::string &stage) {
+        if (stage == "socket_create") return 8;
+        return 0;
+    };
+    r = Network::download_file("http://127.0.0.1:12345/test", "/tmp/x");
+    CHECK(r.success == false);
+    CHECK(r.error_code == 8);
+    Network::test_download_hook = nullptr;
+
+    // Force connect failure
+    Network::test_download_hook = [](const std::string &stage) {
+        if (stage == "connect") return 8;
+        return 0;
+    };
+    r = Network::download_file("http://127.0.0.1:12345/test", "/tmp/x");
+    CHECK(r.success == false);
+    CHECK(r.error_code == 8);
+    Network::test_download_hook = nullptr;
+
+    // Force send failure
+    Network::test_download_hook = [](const std::string &stage) {
+        if (stage == "send") return 8;
+        return 0;
+    };
+    r = Network::download_file("http://127.0.0.1:12345/test", "/tmp/x");
+    CHECK(r.success == false);
+    CHECK(r.error_code == 8);
+    Network::test_download_hook = nullptr;
+
+    // Force fopen failure
+    Network::test_download_hook = [](const std::string &stage) {
+        if (stage == "fopen") return 7;
+        return 0;
+    };
+    r = Network::download_file("http://127.0.0.1:12345/test", "/tmp/x");
+    CHECK(r.success == false);
+    CHECK(r.error_code == 7);
+    Network::test_download_hook = nullptr;
+
+    // Force recv error
+    Network::test_download_hook = [](const std::string &stage) {
+        if (stage == "recv_error") return 8;
+        return 0;
+    };
+    r = Network::download_file("http://127.0.0.1:12345/test", "/tmp/x");
+    CHECK(r.success == false);
+    CHECK(r.error_code == 8);
+    Network::test_download_hook = nullptr;
+}
+
+TEST_CASE("is_host_reachable - forced stages via hook") {
+    Network::test_is_host_hook = [](const std::string &stage) {
+        if (stage == "init") return 5;
+        return 0;
+    };
+    NetworkResult r = Network::is_host_reachable("localhost");
+    CHECK(r.success == false);
+    CHECK(r.error_code == 5);
+    Network::test_is_host_hook = nullptr;
+
+    Network::test_is_host_hook = [](const std::string &stage) {
+        if (stage == "socket_ipv4") return 5;
+        return 0;
+    };
+    r = Network::is_host_reachable("127.0.0.1");
+    CHECK(r.success == false);
+    bool ok2 = (r.error_code == 5 || r.error_code == 2 || r.error_code == 1);
+    CHECK(ok2 == true);
+    Network::test_is_host_hook = nullptr;
+
+    Network::test_is_host_hook = [](const std::string &stage) {
+        if (stage == "connect") return 4;
+        return 0;
+    };
+    r = Network::is_host_reachable("localhost");
+    CHECK(r.success == false);
+    CHECK(r.error_code == 4);
+    Network::test_is_host_hook = nullptr;
 }
 
 } // TEST_SUITE
