@@ -390,6 +390,7 @@ private:
           std::cerr << "AsyncLogSink inner sink write failed" << std::endl;
         }
         lock.lock();
+        if (queue_.empty()) cv_.notify_all();
       }
     }
   }

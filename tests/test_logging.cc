@@ -22,12 +22,13 @@ TEST_CASE("log_level_to_string_and_formatters") {
     CHECK(out.find("file.cpp") != std::string::npos);
 
     JSONLogFormatter jf;
-    LogContext::add_context("k", "v");
-    std::string j = jf.format(LOG_INFO, "m", tm, nullptr, 0);
-    CHECK(j.find("\"level\":\"INFO\"") != std::string::npos);
-    CHECK(j.find("\"message\":\"m\"") != std::string::npos);
-    // cleanup context
-    LogContext::remove_context("k");
+    {
+        LogContext ctx;
+        ctx.add("k", "v");
+        std::string j = jf.format(LOG_INFO, "m", tm, nullptr, 0);
+        CHECK(j.find("\"level\":\"INFO\"") != std::string::npos);
+        CHECK(j.find("\"message\":\"m\"") != std::string::npos);
+    }
 }
 
 TEST_CASE("stream_sink_and_stream_state_handling") {
@@ -78,10 +79,13 @@ TEST_CASE("logger_output_and_configuration") {
 
     // test format_and_log_with_format_string with {}
     Logger::info("hello {}", "world");
-    CHECK(out.str().find("helloworld") != std::string::npos || out.str().find("hello world") != std::string::npos);
+    {
+        bool found = out.str().find("helloworld") != std::string::npos || out.str().find("hello world") != std::string::npos;
+        CHECK(found);
+    }
 
     // structured key/value
-    Logger::info("msg", "k", 123);
+    Logger::info("msg", std::string("k"), 123);
     CHECK(out.str().find("k=123") != std::string::npos);
 
     // restore default streams
