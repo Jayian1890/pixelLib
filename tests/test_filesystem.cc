@@ -14,7 +14,7 @@ static std::string make_temp_dir() {
     std::string base = FileSystem::temp_directory_path();
     if (base.empty()) return std::string();
 
-    // Ensure base does not have a trailing separator for consistency
+    
     if (!base.empty() && (base.back() == '/' || base.back() == '\\')) {
         base.pop_back();
     }
@@ -34,12 +34,10 @@ static std::string make_temp_dir() {
         }
     }
 
-    // Failed to create a unique temporary directory
     return std::string();
 }
 
 static void remove_dir_tree(const std::string &path) {
-    // Simple recursive removal for test purposes (non-robust)
     auto entries = FileSystem::directory_iterator(path);
     for (const auto &e : entries) {
         std::string p = path + "/" + e;
@@ -69,7 +67,6 @@ TEST_CASE("read_write_and_exists") {
 
     CHECK(FileSystem::file_size(file) == static_cast<long long>(contents.size()));
 
-    // cleanup
     CHECK(FileSystem::remove(file));
     CHECK(FileSystem::remove(dir));
 }
@@ -82,7 +79,6 @@ TEST_CASE("create_directories_and_directory_iterator") {
     CHECK(FileSystem::create_directories(nested));
     CHECK(FileSystem::is_directory(nested));
 
-    // Create files
     std::string f1 = dir + "/a/f1.txt";
     std::string f2 = dir + "/a/b/f2.txt";
     CHECK(FileSystem::write_file(f1, "x"));
@@ -121,13 +117,11 @@ TEST_CASE("temp_and_current_path") {
     std::string cwd = FileSystem::current_path();
 
     CHECK(FileSystem::current_path(dir));
-    // Verify we can change to the directory and read it back
     std::string new_cwd = FileSystem::current_path();
-    // Both paths should refer to the same directory (may differ in representation)
+    
     CHECK(FileSystem::exists(new_cwd));
     CHECK(FileSystem::is_directory(new_cwd));
 
-    // restore
     CHECK(FileSystem::current_path(cwd));
     remove_dir_tree(dir);
 }
@@ -143,7 +137,6 @@ TEST_CASE("last_write_time") {
     CHECK(mtime != -1);
     CHECK(mtime > 0);
 
-    // Test on non-existent file
     CHECK(FileSystem::last_write_time(dir + "/nonexistent.txt") == -1);
 
     remove_dir_tree(dir);
@@ -161,31 +154,24 @@ TEST_CASE("create_directory_single_level") {
 }
 
 TEST_CASE("error_handling") {
-    // Test reading non-existent file (using relative path to avoid platform issues)
     std::string content = FileSystem::read_file("nonexistent_file_xyz123.txt");
     CHECK(content.empty());
 
-    // Test file_size on non-existent file
     CHECK(FileSystem::file_size("nonexistent_file_xyz123.txt") == -1);
 
-    // Test copy_file with invalid source
     std::string dir = make_temp_dir();
     REQUIRE(!dir.empty());
     CHECK_FALSE(FileSystem::copy_file("nonexistent_source_xyz123.txt", dir + "/dest.txt"));
 
-    // Test remove on non-existent file
     CHECK_FALSE(FileSystem::remove(dir + "/nonexistent.txt"));
 
-    // Test exists on non-existent path
     CHECK_FALSE(FileSystem::exists("nonexistent_path_xyz123"));
 
-    // Test is_directory on non-existent path
     CHECK_FALSE(FileSystem::is_directory("nonexistent_path_xyz123"));
 
-    // Test is_regular_file on non-existent path
     CHECK_FALSE(FileSystem::is_regular_file("nonexistent_path_xyz123"));
 
     remove_dir_tree(dir);
 }
 
-} // TEST_SUITE
+}

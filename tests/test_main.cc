@@ -5,7 +5,7 @@
 #include "logging.hpp"
 #include "json.hpp"
 
-// Top-level sanity tests
+
 TEST_SUITE("interlaced_core_sanity") {
 
 TEST_CASE("arithmetic") {
@@ -19,10 +19,10 @@ TEST_CASE("filesystem") {
 
 TEST_CASE("logging") {
     std::ostringstream out, err;
-    // Redirect logger outputs
+    
     interlaced::core::logging::Logger::set_output_streams(out, err);
 
-    // Only WARNING and above should be emitted
+    
     interlaced::core::logging::Logger::set_level(interlaced::core::logging::LOG_WARNING);
 
     interlaced::core::logging::Logger::info("filtered out message");
@@ -32,7 +32,7 @@ TEST_CASE("logging") {
     CHECK(out_str.find("visible warning") != std::string::npos);
     CHECK(out_str.find("filtered out message") == std::string::npos);
 
-    // Reset to default streams to avoid interfering with other tests
+    
     interlaced::core::logging::Logger::set_output_streams(std::cout, std::cerr);
 }
 
@@ -44,9 +44,9 @@ TEST_CASE("json") {
 }
 
 TEST_CASE("network") {
-    // Test the simplified HTTP GET implementation
-    std::string response = interlaced::core::network::Network::http_get("http://example.com");
-    CHECK(response.find("HTTP response from http://example.com") != std::string::npos);
+    
+    std::string response = interlaced::core::network::Network::http_get("http:
+    CHECK(response.find("HTTP response from http:
 }
 
-} // TEST_SUITE
+} 

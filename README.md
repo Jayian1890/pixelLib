@@ -117,22 +117,18 @@ interlaced::core::filesystem::FileSystem::create_directories("path/to/dir");
 using interlaced::core::json::JSON;
 using interlaced::core::json::StringifyOptions;
 
-// Parse (throws on error with position info)
 JSON doc = JSON::parse_or_throw(R"({"name":"Ada","scores":[1,2,3],"active":true})");
 
-// Access object members
 const JSON *name = doc.find("name");
 if (name && name->is_string()) {
     std::cout << "Name: " << name->as_string() << "\n";
 }
 
-// Mutate and serialize (compact)
 JSON &user = doc["user"];
 user = JSON::object({{"id", JSON::number("42")}});
 std::string compact = doc.stringify();
 
-// Pretty-print
-StringifyOptions pretty{true /*pretty*/, 2 /*indent*/, false /*escape_solidus*/};
+StringifyOptions pretty{true, 2, false};
 std::string pretty_text = doc.stringify(pretty);
 ```
 

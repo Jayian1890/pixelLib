@@ -9,17 +9,13 @@
 
 using namespace interlaced::core::network;
 
-// --- Begin consolidated test helpers (previously in test_network_helpers.cc) ---
 namespace interlaced {
 namespace core {
 namespace network {
 
-// Define static test hooks
 std::function<int(const std::string&)> Network::test_download_hook = nullptr;
 std::function<int(const std::string&)> Network::test_is_host_hook = nullptr;
 
-// Minimal helper implementations for tests. These are intentionally simple
-// and avoid performing real network I/O.
 int Network::test_get_connection_error_with_errno(int err) {
 #ifndef _WIN32
   errno = err;
@@ -34,7 +30,7 @@ int Network::test_get_connection_error_timeout() {
 #ifdef ETIMEDOUT
   return test_get_connection_error_with_errno(ETIMEDOUT);
 #else
-  return test_get_connection_error_with_errno(110); // fallback
+  return test_get_connection_error_with_errno(110);
 #endif
 }
 
@@ -42,13 +38,11 @@ int Network::test_get_connection_error_refused() {
 #ifdef ECONNREFUSED
   return test_get_connection_error_with_errno(ECONNREFUSED);
 #else
-  return test_get_connection_error_with_errno(111); // fallback
+  return test_get_connection_error_with_errno(111);
 #endif
 }
 
 bool Network::test_download_invalid_url_format(const std::string &url) {
-  // Call download_file with a dummy destination; the function validates the
-  // URL format before performing any network I/O.
   NetworkResult r = download_file(url, "");
   return r.error_code == 6;
 }
@@ -64,17 +58,16 @@ int Network::test_inet_pton_ipv6_fail(const std::string &ip) {
 }
 
 int Network::test_force_is_host_reachable_inet_pton_ipv4(const std::string &ip) {
-  // Try to detect invalid IPv4 format similar to production path
   struct in_addr addr;
   if (inet_pton(AF_INET, ip.c_str(), &addr) <= 0) {
-    return 2; // invalid IPv4 address format error code used by is_host_reachable
+    return 2;
   }
   return 0;
 }
 
 int Network::test_force_download_fopen(const std::string &dest) {
   FILE *f = fopen(dest.c_str(), "wb");
-  if (!f) return 7; // fopen failure code
+  if (!f) return 7;
   fclose(f);
   remove(dest.c_str());
   return 0;
@@ -93,7 +86,6 @@ NetworkResult Network::test_force_download_http_error() {
 }
 
 void Network::test_mark_download_branches() {
-  // Exercise some hooks without performing real network operations
   test_download_hook = [](const std::string &stage) {
     if (stage == "start") return 0;
     return 0;
@@ -106,10 +98,9 @@ void Network::test_mark_is_host_reachable_branches() {
   test_is_host_hook = nullptr;
 }
 
-} // namespace network
-} // namespace core
-} // namespace interlaced
-// --- End consolidated test helpers ---
+}
+}
+}
 
 TEST_SUITE("network_module") {
 
@@ -141,7 +132,6 @@ TEST_CASE("http_response_parsing") {
 }
 
 TEST_CASE("url_encode_decode_placeholders") {
-  // Current implementations are placeholders that return the input
   std::string s = "a b+c%";
   CHECK(Network::url_encode(s) == s);
   CHECK(Network::url_decode(s) == s);
@@ -177,19 +167,16 @@ TEST_CASE("http_helpers_return_expected_strings") {
 }
 
 TEST_CASE("download_file_test_mode_and_input_validation") {
-  // Ensure deterministic behavior by enabling test mode
 #if defined(_WIN32)
   _putenv_s("INTERLACED_TEST_MODE", "1");
 #else
   setenv("INTERLACED_TEST_MODE", "1", 1);
 #endif
 
-  // Create a temporary file name
   char tmpname[L_tmpnam];
   tmpnam(tmpname);
   std::string dest = tmpname;
 
-  // Valid download in test mode should create the file
   NetworkResult r = Network::download_file("http://example/test.txt", dest);
   CHECK(r.success == true);
   FILE *f = fopen(dest.c_str(), "rb");
@@ -197,7 +184,6 @@ TEST_CASE("download_file_test_mode_and_input_validation") {
   if (f) fclose(f);
   remove(dest.c_str());
 
-  // Invalid inputs
   NetworkResult r2 = Network::download_file("", dest);
   CHECK(r2.success == false);
   CHECK(r2.error_code == 1);
@@ -212,7 +198,6 @@ TEST_CASE("download_file_test_mode_and_input_validation") {
 }
 
 TEST_CASE("resolve_hostname_test_mode_and_socket_helpers") {
-  // Ensure deterministic test-mode resolution
 #if defined(_WIN32)
   _putenv_s("INTERLACED_TEST_MODE", "1");
 #else
@@ -222,7 +207,6 @@ TEST_CASE("resolve_hostname_test_mode_and_socket_helpers") {
   CHECK(r.success == true);
   CHECK(r.message.find("127.0.0.1") != std::string::npos);
 
-  // Invalid inputs for socket helpers
   CHECK(Network::create_socket_connection("", 80) == -1);
   CHECK(Network::create_socket_connection("127.0.0.1", 0) == -1);
   CHECK(Network::create_socket_connection("127.0.0.1", 65536) == -1);
@@ -230,25 +214,22 @@ TEST_CASE("resolve_hostname_test_mode_and_socket_helpers") {
 }
 
 TEST_CASE("is_host_reachable_forced_hooks_and_error_mapping") {
-  // Ensure test mode is disabled so hooks are exercised
 #if defined(_WIN32)
   _putenv_s("INTERLACED_TEST_MODE", "0");
 #else
   unsetenv("INTERLACED_TEST_MODE");
 #endif
 
-  // Force connect failure path (target connect stage explicitly)
   Network::test_is_host_hook = [](const std::string &stage) {
-    if (stage == "connect") return 9; // forced connect error
+    if (stage == "connect") return 9;
     return 0;
   };
   NetworkResult r = Network::is_host_reachable("localhost");
   CHECK(r.success == false);
   CHECK(r.error_code == 9);
 
-  // Force connect failure with a different code
   Network::test_is_host_hook = [](const std::string &stage) {
-    if (stage == "connect") return 10; // forced connect error
+    if (stage == "connect") return 10;
     return 0;
   };
   r = Network::is_host_reachable("localhost");
@@ -257,7 +238,6 @@ TEST_CASE("is_host_reachable_forced_hooks_and_error_mapping") {
 
   Network::test_is_host_hook = nullptr;
 
-  // Test errno -> error mapping helpers
   CHECK(Network::test_get_connection_error_timeout() == 3);
   CHECK(Network::test_get_connection_error_refused() == 4);
 }
@@ -275,8 +255,7 @@ TEST_CASE("download_force_failure_helpers_and_branch_marks") {
   CHECK_FALSE(h.success);
   CHECK(h.error_code == 9);
 
-  // Mark internal branches by calling helpers
   Network::test_mark_download_branches();
   Network::test_mark_is_host_reachable_branches();
 }
-} // TEST_SUITE
+}

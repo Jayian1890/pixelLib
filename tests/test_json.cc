@@ -46,13 +46,13 @@ TEST_CASE("parse_strings_and_escapes") {
     CHECK(v.is_string());
     CHECK(v.as_string() == "hello\nworld");
 
-    // Unicode escape
+    
     CHECK(JSON::parse("\"\\u0041\\u0042\\u0043\"", v));
     CHECK(v.as_string() == "ABC");
 
-    // Surrogate pair (emoji U+1F600)
+    
     CHECK(JSON::parse("\"\\uD83D\\uDE00\"", v));
-    CHECK(v.as_string().size() >= 4); // utf-8 multi-byte
+    CHECK(v.as_string().size() >= 4); 
 }
 
 TEST_CASE("parse_arrays_and_objects") {
@@ -99,7 +99,7 @@ TEST_CASE("stringify_and_escape_options") {
     std::string pretty = obj.stringify({true, 4, false});
     CHECK(pretty.find("\n") != std::string::npos);
 
-    // Escaping solidus
+    
     JSON s = JSON(std::string("/path/"));
     std::string escaped = s.stringify({false,2,true});
     CHECK(escaped.find("\\/") != std::string::npos);
@@ -113,16 +113,16 @@ TEST_CASE("validate_and_parse_or_throw") {
 }
 
 TEST_CASE("number_conversion_fallbacks") {
-    // Non-numeric representation should return the provided fallback
+    
     JSON n = JSON::number("notanumber");
     CHECK(Approx(n.as_number().to_double(3.14)) == 3.14);
     CHECK(n.as_number().to_int64(42) == 42);
 
-    // Extremely large integer is clamped by `strtoll` to LLONG_MAX
+    
     JSON big = JSON::number("9999999999999999999999999999");
     CHECK(big.as_number().to_int64(123) == std::numeric_limits<int64_t>::max());
 
-    // Fractional numbers are not integral
+    
     JSON frac = JSON::number("1.23");
     CHECK_FALSE(frac.as_number().is_integral());
 }
@@ -131,16 +131,16 @@ TEST_CASE("unicode_escape_error_cases") {
     JSON v;
     JsonError err;
 
-    // Invalid hex in unicode escape
+    
     CHECK_FALSE(JSON::parse("\"\\uZZZZ\"", v, &err));
     CHECK(err.message.find("Invalid hex in unicode escape") != std::string::npos);
 
-    // High surrogate followed by invalid low surrogate
+    
     CHECK_FALSE(JSON::parse("\"\\uD800\\u0041\"", v, &err));
     CHECK(err.message.find("Invalid low surrogate") != std::string::npos);
 
-    // Missing low surrogate after a high surrogate
+    
     CHECK_FALSE(JSON::parse("\"\\uD83D\"", v, &err));
     CHECK(err.message.find("Missing low surrogate") != std::string::npos);
 }
-} // TEST_SUITE
+} 
