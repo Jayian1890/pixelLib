@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 using namespace interlaced::core::network;
 
@@ -94,7 +97,7 @@ void Network::test_mark_download_branches() {
 }
 
 void Network::test_mark_is_host_reachable_branches() {
-  test_is_host_hook = [](const std::string &stage) { return 0; };
+  test_is_host_hook = [](const std::string &) { return 0; };
   test_is_host_hook = nullptr;
 }
 
@@ -169,12 +172,14 @@ TEST_CASE("http_helpers_return_expected_strings") {
 TEST_CASE("download_file_test_mode_and_input_validation") {
 #if defined(_WIN32)
   _putenv_s("INTERLACED_TEST_MODE", "1");
-#else
-  setenv("INTERLACED_TEST_MODE", "1", 1);
-#endif
-
   char tmpname[L_tmpnam];
   tmpnam(tmpname);
+#else
+  setenv("INTERLACED_TEST_MODE", "1", 1);
+  char tmpname[] = "/tmp/pixelXXXXXX";
+  int fd = mkstemp(tmpname);
+  if (fd != -1) close(fd);
+#endif
   std::string dest = tmpname;
 
   NetworkResult r = Network::download_file("http://example/test.txt", dest);
