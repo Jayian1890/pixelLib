@@ -1,4 +1,4 @@
-# Interlaced Core Library
+# pixelLib
 
 A comprehensive C++ core library providing essential utilities for filesystem operations, JSON parsing, logging, and network operations.
 
@@ -25,15 +25,15 @@ A comprehensive C++ core library providing essential utilities for filesystem op
 - Structured logging support (key/value pairs)
 - Fluent configuration using `Logger::LoggerConfig` and `Logger::LoggerConfigBuilder`
 - Named category loggers via `Logger::get("name")` and `Logger::LoggerRegistry`
-- Compile-time log-level filtering via setting preprocessor macro `INTERLACED_COMPILED_LOG_LEVEL` to one of:
-  - `INTERLACED_LOG_LEVEL_TRACE` (0) — enable all logs
-  - `INTERLACED_LOG_LEVEL_DEBUG` (1)
-  - `INTERLACED_LOG_LEVEL_INFO` (2)
-  - `INTERLACED_LOG_LEVEL_WARNING` (3)
-  - `INTERLACED_LOG_LEVEL_ERROR` (4)
-  - `INTERLACED_LOG_LEVEL_FATAL` (5)
+- Compile-time log-level filtering via setting preprocessor macro `PIXELLIB_COMPILED_LOG_LEVEL` to one of:
+  - `PIXELLIB_LOG_LEVEL_TRACE` (0) — enable all logs
+  - `PIXELLIB_LOG_LEVEL_DEBUG` (1)
+  - `PIXELLIB_LOG_LEVEL_INFO` (2)
+  - `PIXELLIB_LOG_LEVEL_WARNING` (3)
+  - `PIXELLIB_LOG_LEVEL_ERROR` (4)
+  - `PIXELLIB_LOG_LEVEL_FATAL` (5)
 
-  Define `INTERLACED_COMPILED_LOG_LEVEL` before including `logging.hpp` to remove lower-level logging APIs at compile time (e.g., `#define INTERLACED_COMPILED_LOG_LEVEL INTERLACED_LOG_LEVEL_INFO`).
+  Define `PIXELLIB_COMPILED_LOG_LEVEL` before including `logging.hpp` to remove lower-level logging APIs at compile time (e.g., `#define PIXELLIB_COMPILED_LOG_LEVEL PIXELLIB_LOG_LEVEL_INFO`).
 
 - Disable file logging by calling `Logger::set_file_logging(nullptr)` to safely remove any active file logger
 - Simple "{}" placeholder formatting is supported (e.g. `Logger::error("Failed: {}", error_code)`) and structured logging is available as `Logger::info("User login", "user_id", 12345, "ip", "1.2.3.4")`
@@ -77,7 +77,7 @@ make coverage
 
 Coverage reports are generated in the `build/coverage` directory.
 
-Test mode for per-test isolation: set the environment variable `INTERLACED_TEST_MODE=1` to make network operations deterministic and offline-safe (e.g., DNS resolves to 127.0.0.1, reachability returns success, and downloads write a small placeholder file).
+Test mode for per-test isolation: set the environment variable `PIXELLIB_TEST_MODE=1` to make network operations deterministic and offline-safe (e.g., DNS resolves to 127.0.0.1, reachability returns success, and downloads write a small placeholder file).
 
 **Note:** Test source files under `tests/` are excluded from the coverage report to avoid counting test code in coverage numbers.
 
@@ -95,27 +95,29 @@ In VS Code use the Coverage Gutters command palette ("Coverage Gutters: Display 
 Include the header files in your project:
 
 ```cpp
-#include "interlaced_core/filesystem.hpp"
-#include "interlaced_core/json.hpp"
-#include "interlaced_core/logging.hpp"
-#include "interlaced_core/network.hpp"
+#include "pixellib/filesystem.hpp"
+#include "pixellib/json.hpp"
+#include "pixellib/logging.hpp"
+#include "pixellib/network.hpp"
 ```
 
 ### Example Usage
 
+#### Note: The project namespace and include path are now `pixellib` (e.g., `#include "pixellib/filesystem.hpp"`).
+
 #### Filesystem Operations
 ```cpp
-#include "interlaced_core/filesystem.hpp"
+#include "pixellib/filesystem.hpp"
 
-bool exists = interlaced::core::filesystem::FileSystem::exists("file.txt");
-interlaced::core::filesystem::FileSystem::create_directories("path/to/dir");
+bool exists = pixellib::core::filesystem::FileSystem::exists("file.txt");
+pixellib::core::filesystem::FileSystem::create_directories("path/to/dir");
 ```
 
 #### JSON Operations
 ```cpp
-#include "interlaced_core/json.hpp"
-using interlaced::core::json::JSON;
-using interlaced::core::json::StringifyOptions;
+#include "json.hpp"
+using pixellib::core::json::JSON;
+using pixellib::core::json::StringifyOptions;
 
 JSON doc = JSON::parse_or_throw(R"({"name":"Ada","scores":[1,2,3],"active":true})");
 
@@ -134,9 +136,9 @@ std::string pretty_text = doc.stringify(pretty);
 
 #### Logging
 ```cpp
-#include "interlaced_core/logging.hpp"
+#include "logging.hpp"
 
-using namespace interlaced::core::logging;
+using namespace pixellib::core::logging;
 
 Logger::set_level(LOG_DEBUG);
 Logger::info("Application started");
@@ -145,22 +147,22 @@ Logger::error("An error occurred: {}", error_code);
 
 #### Network Operations
 ```cpp
-#include "interlaced_core/network.hpp"
+#include "network.hpp"
 
 // Resolve hostname to IP
-auto resolve_result = interlaced::core::network::Network::resolve_hostname("google.com");
+auto resolve_result = pixellib::core::network::Network::resolve_hostname("google.com");
 if (resolve_result.success) {
     std::cout << "IP Address: " << resolve_result.message << std::endl;
 }
 
 // Check if host is reachable
-auto reach_result = interlaced::core::network::Network::is_host_reachable("google.com");
+auto reach_result = pixellib::core::network::Network::is_host_reachable("google.com");
 if (reach_result.success) {
     std::cout << "Host is reachable" << std::endl;
 }
 
 // Download a file
-auto download_result = interlaced::core::network::Network::download_file(
+auto download_result = pixellib::core::network::Network::download_file(
     "http://example.com/file.txt", "local_file.txt");
 ```
 

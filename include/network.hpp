@@ -1,5 +1,5 @@
-#ifndef INTERLACED_CORE_NETWORK_HPP
-#define INTERLACED_CORE_NETWORK_HPP
+#ifndef PIXELLIB_CORE_NETWORK_HPP
+#define PIXELLIB_CORE_NETWORK_HPP
 
 #include <cstdlib>
 #include <ctime>
@@ -25,7 +25,7 @@
 #include <cstdlib>
 #include <cstring>
 
-namespace interlaced {
+namespace pixellib {
 
 namespace core {
 
@@ -54,7 +54,7 @@ private:
 #endif
   }
   static bool is_test_mode() {
-    const char* v = std::getenv("INTERLACED_TEST_MODE");
+    const char* v = std::getenv("PIXELLIB_TEST_MODE");
     return v && v[0] == '1';
   }
   static void set_socket_timeout(int sockfd, int timeout_seconds) {

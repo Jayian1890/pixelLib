@@ -10,9 +10,9 @@
 #include <unistd.h>
 #endif
 
-using namespace interlaced::core::network;
+using namespace pixellib::core::network;
 
-namespace interlaced {
+namespace pixellib {
 namespace core {
 namespace network {
 
@@ -171,11 +171,11 @@ TEST_CASE("http_helpers_return_expected_strings") {
 
 TEST_CASE("download_file_test_mode_and_input_validation") {
 #if defined(_WIN32)
-  _putenv_s("INTERLACED_TEST_MODE", "1");
+  _putenv_s("PIXELLIB_TEST_MODE", "1");
   char tmpname[L_tmpnam];
   tmpnam(tmpname);
 #else
-  setenv("INTERLACED_TEST_MODE", "1", 1);
+  setenv("PIXELLIB_TEST_MODE", "1", 1);
   char tmpname[] = "/tmp/pixelXXXXXX";
   int fd = mkstemp(tmpname);
   if (fd != -1) close(fd);
@@ -204,9 +204,9 @@ TEST_CASE("download_file_test_mode_and_input_validation") {
 
 TEST_CASE("resolve_hostname_test_mode_and_socket_helpers") {
 #if defined(_WIN32)
-  _putenv_s("INTERLACED_TEST_MODE", "1");
+  _putenv_s("PIXELLIB_TEST_MODE", "1");
 #else
-  setenv("INTERLACED_TEST_MODE", "1", 1);
+  setenv("PIXELLIB_TEST_MODE", "1", 1);
 #endif
   NetworkResult r = Network::resolve_hostname("localhost");
   CHECK(r.success == true);
@@ -220,9 +220,9 @@ TEST_CASE("resolve_hostname_test_mode_and_socket_helpers") {
 
 TEST_CASE("is_host_reachable_forced_hooks_and_error_mapping") {
 #if defined(_WIN32)
-  _putenv_s("INTERLACED_TEST_MODE", "0");
+  _putenv_s("PIXELLIB_TEST_MODE", "0");
 #else
-  unsetenv("INTERLACED_TEST_MODE");
+  unsetenv("PIXELLIB_TEST_MODE");
 #endif
 
   Network::test_is_host_hook = [](const std::string &stage) {

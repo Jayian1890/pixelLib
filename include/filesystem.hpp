@@ -1,6 +1,6 @@
 
-#ifndef INTERLACED_CORE_FILESYSTEM_HPP
-#define INTERLACED_CORE_FILESYSTEM_HPP
+#ifndef PIXELLIB_CORE_FILESYSTEM_HPP
+#define PIXELLIB_CORE_FILESYSTEM_HPP
 
 #include <string>
 #include <fstream>
@@ -26,7 +26,7 @@
 #define MKDIR(path, mode) mkdir(path, mode)
 #endif
 
-namespace interlaced {
+namespace pixellib {
 
     namespace core {
 

@@ -1,4 +1,4 @@
-# Interlaced Core — Copilot Instructions
+# pixelLib — Copilot Instructions
 
 ## Purpose
 Concise contributor guidance for this header-only C++ utility library (filesystem, JSON, logging, network).

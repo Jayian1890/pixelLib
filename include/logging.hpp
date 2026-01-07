@@ -1,6 +1,6 @@
 /*
- * Interlaced Core Library
- * Copyright (c) 2025 Interlaced Pixel
+ * pixelLib
+ * Copyright (c) 2025 pixelLib
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@
  * SOFTWARE.
  */
 
-#ifndef INTERLACED_CORE_LOGGING_HPP
-#define INTERLACED_CORE_LOGGING_HPP
+#ifndef PIXELLIB_CORE_LOGGING_HPP
+#define PIXELLIB_CORE_LOGGING_HPP
 
 #include <chrono>
 #include <fstream>
@@ -50,12 +50,12 @@ inline void localtime_threadsafe(const std::time_t *time, std::tm *tm) {
 }
 
 /**
- * @brief Core logging utilities for the Interlaced framework
+ * @brief Core logging utilities for the pixelLib framework
  *
  * This module provides a thread-safe logging system with multiple log levels
  * and configurable output destinations.
  */
-namespace interlaced {
+namespace pixellib {
 
 namespace core {
 
@@ -69,25 +69,25 @@ namespace logging {
  * level is greater than or equal to the current log level setting.
  */
 // Numeric log level values for optional compile-time filtering
-#define INTERLACED_LOG_LEVEL_TRACE 0
-#define INTERLACED_LOG_LEVEL_DEBUG 1
-#define INTERLACED_LOG_LEVEL_INFO 2
-#define INTERLACED_LOG_LEVEL_WARNING 3
-#define INTERLACED_LOG_LEVEL_ERROR 4
-#define INTERLACED_LOG_LEVEL_FATAL 5
+#define PIXELLIB_LOG_LEVEL_TRACE 0
+#define PIXELLIB_LOG_LEVEL_DEBUG 1
+#define PIXELLIB_LOG_LEVEL_INFO 2
+#define PIXELLIB_LOG_LEVEL_WARNING 3
+#define PIXELLIB_LOG_LEVEL_ERROR 4
+#define PIXELLIB_LOG_LEVEL_FATAL 5
 
-#ifndef INTERLACED_COMPILED_LOG_LEVEL
+#ifndef PIXELLIB_COMPILED_LOG_LEVEL
 // Default: enable all levels (TRACE and up)
-#define INTERLACED_COMPILED_LOG_LEVEL INTERLACED_LOG_LEVEL_TRACE
+#define PIXELLIB_COMPILED_LOG_LEVEL PIXELLIB_LOG_LEVEL_TRACE
 #endif
 
 enum LogLevel {
-  LOG_TRACE = INTERLACED_LOG_LEVEL_TRACE,   ///< Trace-level messages, very verbose and fine-grained
-  LOG_DEBUG = INTERLACED_LOG_LEVEL_DEBUG,   ///< Debug-level messages, typically for development only
-  LOG_INFO = INTERLACED_LOG_LEVEL_INFO,    ///< Informational messages about normal operation
-  LOG_WARNING = INTERLACED_LOG_LEVEL_WARNING, ///< Warning messages about potential issues
-  LOG_ERROR = INTERLACED_LOG_LEVEL_ERROR,   ///< Error messages about serious problems
-  LOG_FATAL = INTERLACED_LOG_LEVEL_FATAL    ///< Fatal errors that may require immediate attention
+  LOG_TRACE = PIXELLIB_LOG_LEVEL_TRACE,   ///< Trace-level messages, very verbose and fine-grained
+  LOG_DEBUG = PIXELLIB_LOG_LEVEL_DEBUG,   ///< Debug-level messages, typically for development only
+  LOG_INFO = PIXELLIB_LOG_LEVEL_INFO,    ///< Informational messages about normal operation
+  LOG_WARNING = PIXELLIB_LOG_LEVEL_WARNING, ///< Warning messages about potential issues
+  LOG_ERROR = PIXELLIB_LOG_LEVEL_ERROR,   ///< Error messages about serious problems
+  LOG_FATAL = PIXELLIB_LOG_LEVEL_FATAL    ///< Fatal errors that may require immediate attention
 };
 
 /**
@@ -475,7 +475,7 @@ public:
 
 } // namespace logging
 } // namespace core
-} // namespace interlaced
+} // namespace pixellib
 
 // Global thread-local log context storage
 namespace {
@@ -488,7 +488,7 @@ namespace {
 /**
  * @brief Thread-local storage for log context
  */
-namespace interlaced {
+namespace pixellib {
 namespace core {
 namespace logging {
 namespace LogContextStorage {
@@ -709,7 +709,7 @@ public:
  *
  * Example usage:
  * @code
- * using namespace interlaced::core::logging;
+ * using namespace pixellib::core::logging;
  * Logger::set_level(LOG_INFO);
  * Logger::info("Application started");
  * Logger::warning("This is a warning message");
@@ -1245,7 +1245,7 @@ public:
    *
    * @param message The debug message to log
    */
-#if INTERLACED_COMPILED_LOG_LEVEL <= INTERLACED_LOG_LEVEL_DEBUG
+#if PIXELLIB_COMPILED_LOG_LEVEL <= PIXELLIB_LOG_LEVEL_DEBUG
   static void debug(const std::string &message) { log(LOG_DEBUG, message); }
 
   /**
@@ -1328,7 +1328,7 @@ public:
   /**
    * @brief Log a trace message
    */
-#if INTERLACED_COMPILED_LOG_LEVEL <= INTERLACED_LOG_LEVEL_TRACE
+#if PIXELLIB_COMPILED_LOG_LEVEL <= PIXELLIB_LOG_LEVEL_TRACE
   static void trace(const std::string &message) { log(LOG_TRACE, message); }
   static void trace(const std::string &message, const char *file, int line) {
     log(LOG_TRACE, message, file, line);
@@ -1560,7 +1560,7 @@ public:
   }
 
   // Note: level-specific format overloads for debug/trace are conditionally
-  // defined earlier (to honor INTERLACED_COMPILED_LOG_LEVEL). Do not redefine here.
+  // defined earlier (to honor PIXELLIB_COMPILED_LOG_LEVEL). Do not redefine here.
 
   /**
    * @brief Log an info message with type-safe formatting
@@ -1752,10 +1752,10 @@ inline void Logger::async_shutdown() {
  *
  * Usage: LOG_DEBUG("Message");
  */
-#if INTERLACED_COMPILED_LOG_LEVEL <= INTERLACED_LOG_LEVEL_TRACE
-#ifndef INTERLACED_CORE_DISABLE_TRACE_LOGS
+#if PIXELLIB_COMPILED_LOG_LEVEL <= PIXELLIB_LOG_LEVEL_TRACE
+#ifndef PIXELLIB_CORE_DISABLE_TRACE_LOGS
 #define LOG_TRACE(msg)                                                         \
-  interlaced::core::logging::Logger::trace(msg, __FILE__, __LINE__)
+  pixellib::core::logging::Logger::trace(msg, __FILE__, __LINE__)
 #else
 #define LOG_TRACE(msg) (void)0
 #endif
@@ -1763,10 +1763,10 @@ inline void Logger::async_shutdown() {
 #define LOG_TRACE(msg) (void)0
 #endif
 
-#if INTERLACED_COMPILED_LOG_LEVEL <= INTERLACED_LOG_LEVEL_DEBUG
-#ifndef INTERLACED_CORE_DISABLE_DEBUG_LOGS
+#if PIXELLIB_COMPILED_LOG_LEVEL <= PIXELLIB_LOG_LEVEL_DEBUG
+#ifndef PIXELLIB_CORE_DISABLE_DEBUG_LOGS
 #define LOG_DEBUG(msg)                                                         \
-  interlaced::core::logging::Logger::debug(msg, __FILE__, __LINE__)
+  pixellib::core::logging::Logger::debug(msg, __FILE__, __LINE__)
 #else
 #define LOG_DEBUG(msg) (void)0
 #endif
@@ -1781,7 +1781,7 @@ inline void Logger::async_shutdown() {
  * Usage: LOG_INFO("Message");
  */
 #define LOG_INFO(msg)                                                          \
-  interlaced::core::logging::Logger::info(msg, __FILE__, __LINE__)
+  pixellib::core::logging::Logger::info(msg, __FILE__, __LINE__)
 
 /**
  * @brief Convenience macro for logging fatal messages with file and
@@ -1790,7 +1790,7 @@ inline void Logger::async_shutdown() {
  * Usage: LOG_FATAL("Message");
  */
 #define LOG_FATAL(msg)                                                         \
-  interlaced::core::logging::Logger::fatal(msg, __FILE__, __LINE__)
+  pixellib::core::logging::Logger::fatal(msg, __FILE__, __LINE__)
 
 /**
  * @brief Convenience macro for logging warning messages with file and line
@@ -1799,7 +1799,7 @@ inline void Logger::async_shutdown() {
  * Usage: LOG_WARNING("Message");
  */
 #define LOG_WARNING(msg)                                                       \
-  interlaced::core::logging::Logger::warning(msg, __FILE__, __LINE__)
+  pixellib::core::logging::Logger::warning(msg, __FILE__, __LINE__)
 
 /**
  * @brief Convenience macro for logging error messages with file and line
@@ -1808,7 +1808,7 @@ inline void Logger::async_shutdown() {
  * Usage: LOG_ERROR("Message");
  */
 #define LOG_ERROR(msg)                                                         \
-  interlaced::core::logging::Logger::error(msg, __FILE__, __LINE__)
+  pixellib::core::logging::Logger::error(msg, __FILE__, __LINE__)
 
 
 // Test helpers: small functions to exercise edge-case cleanup and error printing paths in tests
@@ -1829,6 +1829,6 @@ inline void test_force_logging_error_messages(const std::string &msg) {
 
 } // namespace core
 
-} // namespace interlaced
+} // namespace pixellib
 
-#endif // INTERLACED_CORE_LOGGING_HPP
+#endif // PIXELLIB_CORE_LOGGING_HPP

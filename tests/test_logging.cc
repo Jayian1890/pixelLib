@@ -5,7 +5,7 @@
 #include <thread>
 #include <chrono>
 
-using namespace interlaced::core::logging;
+using namespace pixellib::core::logging;
 
 TEST_SUITE("logging_module") {
 

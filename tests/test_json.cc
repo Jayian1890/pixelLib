@@ -3,7 +3,7 @@
 #include <sstream>
 #include <limits>
 
-using namespace interlaced::core::json;
+using namespace pixellib::core::json;
 using doctest::Approx;
 
 TEST_SUITE("json_module") {

@@ -70,11 +70,11 @@ COVERAGE_DIR := build/coverage
 
 ALL_SOURCES := $(wildcard $(TEST_DIR)/*.cc)
 SOURCES := $(ALL_SOURCES)
-TEST_BIN := $(BIN_DIR)/interlaced_core_tests
+TEST_BIN := $(BIN_DIR)/pixellib_tests
 
 .PHONY: all test run-tests coverage clean doctest
 
-all: test
+all: clean test coverage doctest
 
 $(TEST_BIN): $(SOURCES) third_party/doctest/doctest.h | $(BIN_DIR)
 	$(CXX) -std=$(STD) $(WARN) $(DBG) $(INCLUDES) $(COV_CFLAGS) $(SOURCES) -o $(TEST_BIN) $(LIBS)

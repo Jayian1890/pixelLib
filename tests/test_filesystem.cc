@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-using namespace interlaced::core::filesystem;
+using namespace pixellib::core::filesystem;
 
 static std::string make_temp_dir() {
     std::string base = FileSystem::temp_directory_path();
@@ -26,7 +26,7 @@ static std::string make_temp_dir() {
     }
 
     for (int i = 0; i < 100; ++i) {
-        std::string dir = base + "/interlaced_test_" + std::to_string(std::rand());
+        std::string dir = base + "/pixellib_test_" + std::to_string(std::rand());
         if (!FileSystem::exists(dir)) {
             if (FileSystem::create_directories(dir)) {
                 return dir;

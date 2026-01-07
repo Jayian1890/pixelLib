@@ -1,6 +1,6 @@
 
-#ifndef INTERLACED_CORE_JSON_HPP
-#define INTERLACED_CORE_JSON_HPP
+#ifndef PIXELLIB_CORE_JSON_HPP
+#define PIXELLIB_CORE_JSON_HPP
 
 #include <cctype>
 #include <cstdint>
@@ -14,7 +14,7 @@
 #include <vector>
 #include <sstream>
 
-namespace interlaced {
+namespace pixellib {
 
 namespace core {
 
