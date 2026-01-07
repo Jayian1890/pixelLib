@@ -69,8 +69,7 @@ BIN_DIR := build/tests
 COVERAGE_DIR := build/coverage
 
 ALL_SOURCES := $(wildcard $(TEST_DIR)/*.cc)
-# Exclude logging-related tests (any file starting with test_logging)
-SOURCES := $(filter-out $(TEST_DIR)/test_logging%.cc,$(ALL_SOURCES))
+SOURCES := $(ALL_SOURCES)
 TEST_BIN := $(BIN_DIR)/interlaced_core_tests
 
 .PHONY: all test run-tests coverage clean doctest
