@@ -136,7 +136,7 @@ std::string pretty_text = doc.stringify(pretty);
 
 #### Logging
 ```cpp
-#include "pixellib/logging.hpp"
+#include "logging.hpp"
 
 using namespace pixellib::core::logging;
 
