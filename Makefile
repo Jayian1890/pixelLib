@@ -1,8 +1,8 @@
 CXX ?= clang++
-STD ?= c++17
+STD ?= c++23
 WARN := -Wall -Wextra -Wpedantic
 DBG := -O0 -g
-INCLUDES := -Iinclude -Itests
+INCLUDES := -Iinclude -Itests -Ithird-party
 
 # Detect compiler type
 CXX_VERSION := $(shell $(CXX) --version 2>/dev/null)
@@ -69,10 +69,11 @@ BIN_DIR := build/tests
 COVERAGE_DIR := build/coverage
 
 ALL_SOURCES := $(wildcard $(TEST_DIR)/*.cc)
-SOURCES := $(ALL_SOURCES)
+DOCTEST_MAIN := $(TEST_DIR)/doctest_main.cpp
+SOURCES := $(filter-out $(DOCTEST_MAIN), $(ALL_SOURCES)) $(DOCTEST_MAIN)
 TEST_BIN := $(BIN_DIR)/pixellib_tests
 
-.PHONY: all test run-tests coverage clean doctest
+.PHONY: all test run-tests coverage clean doctest clang-tidy clang-tidy-fix
 
 all: clean test coverage doctest
 
@@ -127,3 +128,16 @@ lcov-rel: coverage
 
 clean:
 	rm -rf $(BIN_DIR) $(COVERAGE_DIR)
+
+# Clang-tidy targets
+clang-tidy:
+	@echo "Running clang-tidy checks..."
+	@./tools/run-clang-tidy.sh
+
+clang-tidy-fix:
+	@echo "Running clang-tidy with automatic fixes..."
+	@./tools/run-clang-tidy.sh --fix
+
+clang-tidy-report:
+	@echo "Generating clang-tidy markdown report..."
+	@./tools/run-clang-tidy.sh --format markdown -o build/clang-tidy-report.md
