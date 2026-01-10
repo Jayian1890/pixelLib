@@ -1,9 +1,29 @@
+#include <iostream>
+#include <sstream>
+#include <string>
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "../third-party/doctest/doctest.h"
 #include "../include/network.hpp"
 #include "../include/filesystem.hpp"
 #include "../include/logging.hpp"
 #include "../include/json.hpp"
+
+int main() {
+    using namespace pixellib_test;
+    for (const auto &t : registry()) {
+        try {
+            t.fn();
+        } catch (const std::exception &e) {
+            record_failure(e.what(), __FILE__, __LINE__);
+        } catch (...) {
+            record_failure("unknown exception", __FILE__, __LINE__);
+        }
+    }
+    return failure_count() == 0 ? 0 : 1;
+}
+
+
+TEST_SUITE("sanity checks") {
 
 TEST_CASE("arithmetic") {
     CHECK(1 + 1 == 2);
@@ -45,4 +65,6 @@ TEST_CASE("network") {
 
     std::string r4 = pixellib::core::network::Network::https_post("https://example/post", "p");
     CHECK(r4.find("p") != std::string::npos);
+}
+
 }
