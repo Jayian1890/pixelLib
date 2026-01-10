@@ -48,6 +48,33 @@ A comprehensive C++ core library providing essential utilities for filesystem op
 - IP address validation (IPv4 and IPv6)
 - Bandwidth and latency measurement tools
 
+## Code Quality
+
+This project uses clang-tidy for static analysis and code quality enforcement:
+
+### Quick Start
+```bash
+# Install clang-tidy (one-time setup)
+./tools/setup-clang-tidy.sh
+
+# Run all checks
+make clang-tidy
+
+# Apply automatic fixes
+make clang-tidy-fix
+
+# Generate detailed report
+make clang-tidy-report
+```
+
+### Features
+- **Modern C++23**: Encourages best practices and modern language features
+- **Performance**: Identifies optimization opportunities and inefficiencies  
+- **Security**: Catches potential bugs and security vulnerabilities
+- **Style**: Enforces consistent coding standards and readability
+
+For detailed usage and configuration, see [docs/CLANG_TIDY.md](docs/CLANG_TIDY.md).
+
 ## Building
 
 This project uses a Makefile for building. Run the following commands:
