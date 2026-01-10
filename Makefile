@@ -73,7 +73,7 @@ DOCTEST_MAIN := $(TEST_DIR)/doctest_main.cpp
 SOURCES := $(filter-out $(DOCTEST_MAIN), $(ALL_SOURCES)) $(DOCTEST_MAIN)
 TEST_BIN := $(BIN_DIR)/pixellib_tests
 
-.PHONY: all test run-tests coverage clean doctest clang-tidy clang-tidy-fix
+.PHONY: all test run-tests coverage clean doctest compile-commands clang-tidy clang-tidy-fix clang-tidy-report
 
 all: clean test coverage doctest
 
@@ -129,15 +129,41 @@ lcov-rel: coverage
 clean:
 	rm -rf $(BIN_DIR) $(COVERAGE_DIR)
 
+# Generate compilation database for clangd
+compile-commands: | $(BIN_DIR)
+	@echo "Generating compile_commands.json..."
+	@echo "[" > $(BIN_DIR)/compile_commands.json
+	@first=true; \
+	for src in $(SOURCES); do \
+		if $$first; then \
+			first=false; \
+		else \
+			echo "," >> $(BIN_DIR)/compile_commands.json; \
+		fi; \
+		echo "{ \"directory\": \"$(CURDIR)\", \"command\": \"$(CXX) -std=$(STD) $(WARN) $(DBG) $(INCLUDES) $(COV_CFLAGS) -c $$src\", \"file\": \"$$src\" }" >> $(BIN_DIR)/compile_commands.json; \
+	done
+	@echo "]" >> $(BIN_DIR)/compile_commands.json
+	@cp $(BIN_DIR)/compile_commands.json build/compile_commands.json
+	@echo "Compilation database generated at build/compile_commands.json"
+
 # Clang-tidy targets
-clang-tidy:
-	@echo "Running clang-tidy checks..."
-	@./tools/run-clang-tidy.sh
+clang-tidy: compile-commands
+	@echo "Running clang-tidy on all source files..."
+	@$(CXX) --version | grep -q clang && \
+		for src in $(SOURCES); do \
+			echo "Checking $$src..."; \
+			clang-tidy $$src --config-file=.clang-tidy; \
+		done || echo "clang-tidy requires clang++"
 
-clang-tidy-fix:
-	@echo "Running clang-tidy with automatic fixes..."
-	@./tools/run-clang-tidy.sh --fix
+clang-tidy-fix: compile-commands
+	@echo "Running clang-tidy with auto-fix..."
+	@$(CXX) --version | grep -q clang && \
+		for src in $(SOURCES); do \
+			echo "Fixing $$src..."; \
+			clang-tidy $$src --config-file=.clang-tidy --fix; \
+		done || echo "clang-tidy requires clang++"
 
-clang-tidy-report:
-	@echo "Generating clang-tidy markdown report..."
-	@./tools/run-clang-tidy.sh --format markdown -o build/clang-tidy-report.md
+clang-tidy-report: compile-commands
+	@echo "Generating clang-tidy report..."
+	@$(CXX) --version | grep -q clang && \
+		clang-tidy $(SOURCES) --config-file=.clang-tidy --output-file=clang-tidy-report.txt || echo "clang-tidy requires clang++"
