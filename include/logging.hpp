@@ -1,6 +1,6 @@
 /*
  * pixelLib
- * Copyright (c) 2025 pixelLib
+ * Copyright (c) 2025 Interlaced Pixel
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,31 +25,32 @@
 #define PIXELLIB_CORE_LOGGING_HPP
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
+#include <cstddef>
 #include <cstdio>
+#include <cstring> // for strstr used to detect placeholder patterns
 #include <ctime>
+#include <deque>
 #include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <sstream>
+#include <string>
+#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <cstddef>
-#include <cstring> // for strstr used to detect placeholder patterns
-#include <mutex>
-#include <thread>
-#include <condition_variable>
-#include <deque>
-#include <atomic>
-#include <sstream>
-#include <string>
 
 // Platform-specific time conversion helper
-inline void localtime_threadsafe(const std::time_t *time, std::tm *tm) {
+inline void localtime_threadsafe(const std::time_t *time, std::tm *tm)
+{
 #if defined(_MSC_VER) || defined(_WIN32)
   localtime_s(tm, time);
 #else
@@ -63,11 +64,14 @@ inline void localtime_threadsafe(const std::time_t *time, std::tm *tm) {
  * This module provides a thread-safe logging system with multiple log levels
  * and configurable output destinations.
  */
-namespace pixellib {
+namespace pixellib
+{
 
-namespace core {
+namespace core
+{
 
-namespace logging {
+namespace logging
+{
 
 /**
  * @brief Log levels for categorizing log messages by severity
@@ -89,13 +93,14 @@ namespace logging {
 #define PIXELLIB_COMPILED_LOG_LEVEL PIXELLIB_LOG_LEVEL_TRACE
 #endif
 
-enum LogLevel {
-  LOG_TRACE = PIXELLIB_LOG_LEVEL_TRACE,   ///< Trace-level messages, very verbose and fine-grained
-  LOG_DEBUG = PIXELLIB_LOG_LEVEL_DEBUG,   ///< Debug-level messages, typically for development only
-  LOG_INFO = PIXELLIB_LOG_LEVEL_INFO,    ///< Informational messages about normal operation
+enum LogLevel
+{
+  LOG_TRACE = PIXELLIB_LOG_LEVEL_TRACE,     ///< Trace-level messages, very verbose and fine-grained
+  LOG_DEBUG = PIXELLIB_LOG_LEVEL_DEBUG,     ///< Debug-level messages, typically for development only
+  LOG_INFO = PIXELLIB_LOG_LEVEL_INFO,       ///< Informational messages about normal operation
   LOG_WARNING = PIXELLIB_LOG_LEVEL_WARNING, ///< Warning messages about potential issues
-  LOG_ERROR = PIXELLIB_LOG_LEVEL_ERROR,   ///< Error messages about serious problems
-  LOG_FATAL = PIXELLIB_LOG_LEVEL_FATAL    ///< Fatal errors that may require immediate attention
+  LOG_ERROR = PIXELLIB_LOG_LEVEL_ERROR,     ///< Error messages about serious problems
+  LOG_FATAL = PIXELLIB_LOG_LEVEL_FATAL      ///< Fatal errors that may require immediate attention
 };
 
 /**
@@ -104,8 +109,10 @@ enum LogLevel {
  * @param level The LogLevel to convert
  * @return const char* String representation of the LogLevel
  */
-inline const char *log_level_to_string(LogLevel level) {
-  switch (level) {
+inline const char *log_level_to_string(LogLevel level)
+{
+  switch (level)
+  {
   case LOG_TRACE:
     return "TRACE";
   case LOG_DEBUG:
@@ -126,7 +133,8 @@ inline const char *log_level_to_string(LogLevel level) {
 /**
  * @brief Timestamp format options
  */
-enum class TimestampFormat {
+enum class TimestampFormat
+{
   STANDARD, ///< YYYY-MM-DD HH:MM:SS
   ISO8601,  ///< YYYY-MM-DDTHH:MM:SSZ
   UNIX,     ///< Unix timestamp (seconds since epoch)
@@ -136,7 +144,8 @@ enum class TimestampFormat {
 /**
  * @brief File rotation strategy
  */
-enum class RotationStrategy {
+enum class RotationStrategy
+{
   SIZE, ///< Rotate based on file size
   TIME  ///< Rotate based on time intervals
 };
@@ -144,7 +153,8 @@ enum class RotationStrategy {
 /**
  * @brief Log sink interface for pluggable log destinations
  */
-class LogSink {
+class LogSink
+{
 public:
   virtual ~LogSink() = default;
   virtual void write(const std::string &message) = 0;
