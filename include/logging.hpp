@@ -1733,8 +1733,8 @@ public:
    * @param message The message to log
    * @param args Key-value pairs to include in the log
    */
-  template <typename... Args>
-  static void debug(const std::string &message, Args &&...args) {
+  template <typename... Args> static void debug(const std::string &message, Args &&...args)
+  {
     log(LOG_DEBUG, message, std::forward<Args>(args)...);
   }
 
@@ -1745,8 +1745,8 @@ public:
    * @param message The message to log
    * @param args Key-value pairs to include in the log
    */
-  template <typename... Args>
-  static void info(const std::string &message, Args &&...args) {
+  template <typename... Args> static void info(const std::string &message, Args &&...args)
+  {
     log(LOG_INFO, message, std::forward<Args>(args)...);
   }
 
@@ -1757,8 +1757,8 @@ public:
    * @param message The message to log
    * @param args Key-value pairs to include in the log
    */
-  template <typename... Args>
-  static void warning(const std::string &message, Args &&...args) {
+  template <typename... Args> static void warning(const std::string &message, Args &&...args)
+  {
     log(LOG_WARNING, message, std::forward<Args>(args)...);
   }
 
@@ -1769,8 +1769,8 @@ public:
    * @param message The message to log
    * @param args Key-value pairs to include in the log
    */
-  template <typename... Args>
-  static void error(const std::string &message, Args &&...args) {
+  template <typename... Args> static void error(const std::string &message, Args &&...args)
+  {
     log(LOG_ERROR, message, std::forward<Args>(args)...);
   }
 
@@ -1790,10 +1790,11 @@ public:
   //   treat the call as (message, file, line).
   // - Else if additional arguments exist, treat as structured key/value pairs.
   // - Otherwise, treat it as a simple message.
-  template <typename... Args>
-  static void format_and_log_with_format_string(LogLevel level, const char *format, Args &&...args) {
+  template <typename... Args> static void format_and_log_with_format_string(LogLevel level, const char *format, Args &&...args)
+  {
     // Quick runtime check for '{}' placeholders
-    if (std::strstr(format, "{}") != nullptr) {
+    if (std::strstr(format, "{}") != nullptr)
+    {
       std::ostringstream oss;
       format_message(oss, format, std::forward<Args>(args)...);
       log(level, oss.str());
@@ -1801,27 +1802,34 @@ public:
     }
 
     // No placeholders: special-case (file, line) pair
-    if constexpr (sizeof...(Args) == 2) {
+    if constexpr (sizeof...(Args) == 2)
+    {
       using First = std::tuple_element_t<0, std::tuple<Args...>>;
       using Second = std::tuple_element_t<1, std::tuple<Args...>>;
-      if constexpr (std::is_convertible_v<std::decay_t<First>, const char *> &&
-                    std::is_integral_v<std::decay_t<Second>>) {
+      if constexpr (std::is_convertible_v<std::decay_t<First>, const char *> && std::is_integral_v<std::decay_t<Second>>)
+      {
         log(level, std::string(format), std::forward<Args>(args)...);
         return;
       }
     }
 
-    if constexpr (sizeof...(Args) > 0) {
-      if constexpr (sizeof...(Args) % 2 == 0) {
+    if constexpr (sizeof...(Args) > 0)
+    {
+      if constexpr (sizeof...(Args) % 2 == 0)
+      {
         // Even number of args: treat as structured key/value pairs
         log(level, std::string(format), std::forward<Args>(args)...);
         return;
-      } else {
+      }
+      else
+      {
         // Odd number of args: ignore extras; log simple message
         log(level, std::string(format));
         return;
       }
-    } else {
+    }
+    else
+    {
       // No extra args: simple message
       log(level, std::string(format));
       return;
