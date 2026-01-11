@@ -24,6 +24,10 @@
 #ifndef PIXELLIB_CORE_FILESYSTEM_HPP
 #define PIXELLIB_CORE_FILESYSTEM_HPP
 
+#ifdef _WIN32
+#define NOMINMAX
+#endif
+
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
@@ -36,6 +40,7 @@
 #include <vector>
 
 #ifdef _WIN32
+#include <direct.h>
 #include <io.h>
 #include <windows.h>
 #ifndef S_ISDIR
@@ -45,6 +50,9 @@
 #define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
 #endif
 #define MKDIR(path, mode) _mkdir(path)
+#define RMDIR(path) _rmdir(path)
+#define GETCWD(buffer, length) _getcwd(buffer, length)
+#define CHDIR(path) _chdir(path)
 #else
 #include <dirent.h>
 #include <unistd.h>
@@ -54,6 +62,9 @@
 #include <limits.h>
 #endif
 #define MKDIR(path, mode) mkdir(path, mode)
+#define RMDIR(path) rmdir(path)
+#define GETCWD(buffer, length) getcwd(buffer, length)
+#define CHDIR(path) chdir(path)
 #endif
 
 namespace pixellib::core::filesystem
@@ -155,11 +166,7 @@ public:
   {
     if (is_directory(path))
     {
-#ifdef _WIN32
-      return _rmdir(path.c_str()) == 0;
-#else
-      return ::rmdir(path.c_str()) == 0;
-#endif
+      return RMDIR(path.c_str()) == 0;
     }
     else
     {
@@ -265,13 +272,13 @@ public:
   {
 #ifdef _WIN32
     char buffer[MAX_PATH];
-    if (_getcwd(buffer, MAX_PATH))
+    if (GETCWD(buffer, MAX_PATH))
     {
       return std::string(buffer);
     }
 #else
     char buffer[PATH_MAX];
-    if (getcwd(buffer, PATH_MAX))
+    if (GETCWD(buffer, PATH_MAX))
     {
       return std::string(buffer);
     }
@@ -281,11 +288,7 @@ public:
 
   static bool current_path(const std::string &path)
   {
-#ifdef _WIN32
-    return _chdir(path.c_str()) == 0;
-#else
-    return chdir(path.c_str()) == 0;
-#endif
+    return CHDIR(path.c_str()) == 0;
   }
 };
 

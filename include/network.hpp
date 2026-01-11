@@ -24,6 +24,10 @@
 #ifndef PIXELLIB_CORE_NETWORK_HPP
 #define PIXELLIB_CORE_NETWORK_HPP
 
+#ifdef _WIN32
+#define NOMINMAX
+#endif
+
 #include <cctype>
 #include <cstdlib>
 #include <ctime>

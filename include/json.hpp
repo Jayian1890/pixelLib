@@ -24,6 +24,10 @@
 #ifndef PIXELLIB_CORE_JSON_HPP
 #define PIXELLIB_CORE_JSON_HPP
 
+#ifdef _WIN32
+#define NOMINMAX
+#endif
+
 #include <doctest/doctest.h>
 
 #include <cctype>
