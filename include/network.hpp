@@ -25,7 +25,9 @@
 #define PIXELLIB_CORE_NETWORK_HPP
 
 #ifdef _WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #endif
 
 #include <cctype>

@@ -25,7 +25,9 @@
 #define PIXELLIB_CORE_FILESYSTEM_HPP
 
 #ifdef _WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #endif
 
 #include <climits>
