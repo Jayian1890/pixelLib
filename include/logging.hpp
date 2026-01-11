@@ -943,9 +943,8 @@ public:
    * @param rotation_hours Hours between log rotations
    * @param max_files Maximum number of log files to keep
    */
-  static void set_file_logging(const std::string &filename,
-                               std::chrono::hours rotation_hours,
-                               int max_files = 5) {
+  static void set_file_logging(const std::string &filename, std::chrono::hours rotation_hours, int max_files = 5)
+  {
     std::lock_guard<std::mutex> lock(log_mutex);
     sinks.clear();
     sinks.emplace_back(std::make_unique<RotatingFileLogger>(filename, rotation_hours, max_files));
@@ -957,7 +956,8 @@ public:
    *
    * Accepts nullptr to explicitly clear/disable file logging.
    */
-  static void set_file_logging(std::nullptr_t) {
+  static void set_file_logging(std::nullptr_t)
+  {
     std::lock_guard<std::mutex> lock(log_mutex);
     file_logger.reset();
     sinks.clear();
@@ -968,7 +968,8 @@ public:
    *
    * @param custom_formatter The custom formatter to use
    */
-  static void set_formatter(std::unique_ptr<LogFormatter> custom_formatter) {
+  static void set_formatter(std::unique_ptr<LogFormatter> custom_formatter)
+  {
     std::lock_guard<std::mutex> lock(log_mutex);
     formatter = std::move(custom_formatter);
   }
