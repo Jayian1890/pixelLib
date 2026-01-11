@@ -1846,8 +1846,8 @@ public:
    * @param format The format string
    * @param args Arguments to format
    */
-  template <typename... Args>
-  static void info(const char *format, Args &&...args) {
+  template <typename... Args> static void info(const char *format, Args &&...args)
+  {
     format_and_log_with_format_string<Args...>(LOG_INFO, format, std::forward<Args>(args)...);
   }
 
@@ -1858,8 +1858,8 @@ public:
    * @param format The format string
    * @param args Arguments to format
    */
-  template <typename... Args>
-  static void warning(const char *format, Args &&...args) {
+  template <typename... Args> static void warning(const char *format, Args &&...args)
+  {
     format_and_log_with_format_string<Args...>(LOG_WARNING, format, std::forward<Args>(args)...);
   }
 
@@ -1870,8 +1870,8 @@ public:
    * @param format The format string
    * @param args Arguments to format
    */
-  template <typename... Args>
-  static void error(const char *format, Args &&...args) {
+  template <typename... Args> static void error(const char *format, Args &&...args)
+  {
     format_and_log_with_format_string<Args...>(LOG_ERROR, format, std::forward<Args>(args)...);
   }
 
@@ -1883,9 +1883,8 @@ public:
    * @param format The format string
    * @param args Arguments to format
    */
-  template <typename... Args>
-  static void format_message(std::ostringstream &oss, const char *format,
-                             Args &&...args) {
+  template <typename... Args> static void format_message(std::ostringstream &oss, const char *format, Args &&...args)
+  {
     format_helper(oss, format, std::forward<Args>(args)...);
   }
 
