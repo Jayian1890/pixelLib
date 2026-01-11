@@ -24,6 +24,7 @@
 #ifndef PIXELLIB_CORE_FILESYSTEM_HPP
 #define PIXELLIB_CORE_FILESYSTEM_HPP
 
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
