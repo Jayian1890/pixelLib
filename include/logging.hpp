@@ -1473,7 +1473,10 @@ public:
    * @param message The debug message to log
    */
 #if PIXELLIB_COMPILED_LOG_LEVEL <= PIXELLIB_LOG_LEVEL_DEBUG
-  static void debug(const std::string &message) { log(LOG_DEBUG, message); }
+  static void debug(const std::string &message)
+  {
+    log(LOG_DEBUG, message);
+  }
 
   /**
    * @brief Log a debug message with file and line information
@@ -1482,20 +1485,20 @@ public:
    * @param file The source file name (typically __FILE__)
    * @param line The source line number (typically __LINE__)
    */
-  static void debug(const std::string &message, const char *file, int line) {
+  static void debug(const std::string &message, const char *file, int line)
+  {
     log(LOG_DEBUG, message, file, line);
   }
 
-  template <typename... Args>
-  static void debug(const char *format, Args &&...args) {
+  template <typename... Args> static void debug(const char *format, Args &&...args)
+  {
     format_and_log_with_format_string<Args...>(LOG_DEBUG, format, std::forward<Args>(args)...);
   }
 #else
   // Compile-time disabled: provide no-op stubs to preserve API
-  static void debug(const std::string &) { }
-  static void debug(const std::string &, const char *, int) { }
-  template <typename... Args>
-  static void debug(const char *, Args &&...) { }
+  static void debug(const std::string &) {}
+  static void debug(const std::string &, const char *, int) {}
+  template <typename... Args> static void debug(const char *, Args &&...) {}
 #endif
 
   /**
@@ -1503,7 +1506,10 @@ public:
    *
    * @param message The informational message to log
    */
-  static void info(const std::string &message) { log(LOG_INFO, message); }
+  static void info(const std::string &message)
+  {
+    log(LOG_INFO, message);
+  }
 
   /**
    * @brief Log an informational message with file and line information
@@ -1512,7 +1518,8 @@ public:
    * @param file The source file name (typically __FILE__)
    * @param line The source line number (typically __LINE__)
    */
-  static void info(const std::string &message, const char *file, int line) {
+  static void info(const std::string &message, const char *file, int line)
+  {
     log(LOG_INFO, message, file, line);
   }
 
