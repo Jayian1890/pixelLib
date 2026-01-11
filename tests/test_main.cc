@@ -79,6 +79,9 @@ TEST_SUITE("Sanity Checks")
     std::string r4 = pixellib::core::network::Network::https_post("https://example/post", "p");
     CHECK(r4.find('p') != std::string::npos);
 
+    double r5 = pixellib::core::network::Network::measure_bandwidth("http://example/test");
+    CHECK(r5 > 0.0);
+
     // Clean up
     unset_env_var("PIXELLIB_TEST_MODE");
   }
