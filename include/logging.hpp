@@ -1571,33 +1571,40 @@ public:
    * @brief Log a trace message
    */
 #if PIXELLIB_COMPILED_LOG_LEVEL <= PIXELLIB_LOG_LEVEL_TRACE
-  static void trace(const std::string &message) { log(LOG_TRACE, message); }
-  static void trace(const std::string &message, const char *file, int line) {
+  static void trace(const std::string &message)
+  {
+    log(LOG_TRACE, message);
+  }
+  static void trace(const std::string &message, const char *file, int line)
+  {
     log(LOG_TRACE, message, file, line);
   }
 
-  template <typename... Args>
-  static void trace(const char *format, Args &&...args) {
+  template <typename... Args> static void trace(const char *format, Args &&...args)
+  {
     format_and_log_with_format_string<Args...>(LOG_TRACE, format, std::forward<Args>(args)...);
   }
 #else
   // Compile-time disabled: provide no-op stubs to preserve API
-  static void trace(const std::string &) { }
-  static void trace(const std::string &, const char *, int) { }
-  template <typename... Args>
-  static void trace(const char *, Args &&...) { }
+  static void trace(const std::string &) {}
+  static void trace(const std::string &, const char *, int) {}
+  template <typename... Args> static void trace(const char *, Args &&...) {}
 #endif
 
   /**
    * @brief Log a fatal message
    */
-  static void fatal(const std::string &message) { log(LOG_FATAL, message); }
-  static void fatal(const std::string &message, const char *file, int line) {
+  static void fatal(const std::string &message)
+  {
+    log(LOG_FATAL, message);
+  }
+  static void fatal(const std::string &message, const char *file, int line)
+  {
     log(LOG_FATAL, message, file, line);
   }
 
-  template <typename... Args>
-  static void fatal(const char *format, Args &&...args) {
+  template <typename... Args> static void fatal(const char *format, Args &&...args)
+  {
     format_and_log_with_format_string<Args...>(LOG_FATAL, format, std::forward<Args>(args)...);
   }
 
@@ -1610,12 +1617,13 @@ public:
    * @param message The message to log
    * @param args Key-value pairs to include in the log
    */
-  template <typename... Args>
-  static void log(LogLevel level, const std::string &message, Args &&...args) {
+  template <typename... Args> static void log(LogLevel level, const std::string &message, Args &&...args)
+  {
     // Early exit if the message won't be logged
     {
       std::lock_guard<std::mutex> lock(log_mutex);
-      if (level < current_level) {
+      if (level < current_level)
+      {
         return;
       }
     }
@@ -1631,13 +1639,15 @@ public:
     std::string formatted_message;
 
     // Use custom formatter if available
-    if (formatter) {
+    if (formatter)
+    {
       formatted_message = formatter->format(level, message, local_tm);
-    } else {
+    }
+    else
+    {
       // Format the message with key-value pairs
       std::ostringstream oss;
-      oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") << "] ["
-          << log_level_to_string(level) << "] " << message;
+      oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") << "] [" << log_level_to_string(level) << "] " << message;
 
       // Add key-value pairs
       format_key_value_pairs(oss, std::forward<Args>(args)...);
@@ -1646,19 +1656,28 @@ public:
       // Prefer sinks if available (early fast path)
       {
         std::lock_guard<std::mutex> lock(log_mutex);
-        if (!sinks.empty()) {
-          for (auto &sink : sinks) {
-            try {
+        if (!sinks.empty())
+        {
+          for (auto &sink : sinks)
+          {
+            try
+            {
               sink->write(formatted_message);
-            } catch (const std::exception &e) {
-              if (auto *ss = dynamic_cast<StreamSink*>(sink.get())) {
+            }
+            catch (const std::exception &e)
+            {
+              if (auto *ss = dynamic_cast<StreamSink *>(sink.get()))
+              {
                 ss->clear_stream();
               }
               std::cerr << "Logging error: " << e.what() << std::endl;
               std::cerr << formatted_message << std::endl;
               std::cerr.flush();
-            } catch (...) {
-              if (auto *ss = dynamic_cast<StreamSink*>(sink.get())) {
+            }
+            catch (...)
+            {
+              if (auto *ss = dynamic_cast<StreamSink *>(sink.get()))
+              {
                 ss->clear_stream();
               }
               std::cerr << "Unknown logging error occurred" << std::endl;
@@ -1673,25 +1692,33 @@ public:
 
     // Output the message (critical section only for output)
     std::lock_guard<std::mutex> lock(log_mutex);
-    if (file_logger) {
+    if (file_logger)
+    {
       file_logger->write(formatted_message);
-    } else {
-      try {
+    }
+    else
+    {
+      try
+      {
         // Choose output stream based on log level
-        std::ostream &out_stream =
-            (level == LOG_ERROR) ? *error_stream : *output_stream;
+        std::ostream &out_stream = (level == LOG_ERROR) ? *error_stream : *output_stream;
         out_stream << formatted_message << std::endl;
 
         // Check if the stream is in a good state
-        if (!out_stream.good()) {
+        if (!out_stream.good())
+        {
           // If the stream is not good, try to reset it
           out_stream.clear();
         }
-      } catch (const std::exception &e) {
+      }
+      catch (const std::exception &e)
+      {
         // If we can't write to the stream, try to write to cerr as a fallback
         std::cerr << "Logging error: " << e.what() << std::endl;
         std::cerr << formatted_message << std::endl;
-      } catch (...) {
+      }
+      catch (...)
+      {
         // If we can't write to the stream, try to write to cerr as a fallback
         std::cerr << "Unknown logging error occurred" << std::endl;
         std::cerr << formatted_message << std::endl;
