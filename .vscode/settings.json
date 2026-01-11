@@ -107,6 +107,9 @@
     // Git integration
     "git.enableSmartCommit": true,
     "git.autofetch": true,
+    // GitLens AI settings - configure for shorter commits
+    "gitlens.ai.generateCommitMessage.enabled": true,
+    "gitlens.experimental.generateCommitMessagePrompt": "Generate concise commit messages under 50 characters",
     // Explorer settings
     "explorer.fileNesting.enabled": true,
     "explorer.fileNesting.patterns": {
