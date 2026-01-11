@@ -1900,9 +1900,8 @@ private:
    * @param value The value
    * @param args Remaining key-value pairs
    */
-  template <typename Key, typename Value, typename... Args>
-  static void format_key_value_pairs(std::ostringstream &oss, Key &&key,
-                                     Value &&value, Args &&...args) {
+  template <typename Key, typename Value, typename... Args> static void format_key_value_pairs(std::ostringstream &oss, Key &&key, Value &&value, Args &&...args)
+  {
     oss << " " << key << "=" << value;
     format_key_value_pairs(oss, std::forward<Args>(args)...);
   }
@@ -1912,7 +1911,8 @@ private:
    *
    * @param oss The output string stream
    */
-  static void format_key_value_pairs(std::ostringstream &oss) {
+  static void format_key_value_pairs(std::ostringstream &oss)
+  {
     // Base case - no more key-value pairs
     (void)oss;
   }
@@ -1927,16 +1927,19 @@ private:
    * @param value The first argument
    * @param args Remaining arguments
    */
-  template <typename T, typename... Args>
-  static void format_helper(std::ostringstream &oss, const char *format,
-                            T &&value, Args &&...args) {
-    while (*format) {
-      if (*format == '{' && *(format + 1) == '}') {
+  template <typename T, typename... Args> static void format_helper(std::ostringstream &oss, const char *format, T &&value, Args &&...args)
+  {
+    while (*format)
+    {
+      if (*format == '{' && *(format + 1) == '}')
+      {
         oss << value;
         format += 2;
         format_helper(oss, format, std::forward<Args>(args)...);
         return;
-      } else {
+      }
+      else
+      {
         oss << *format;
         ++format;
       }
@@ -1949,8 +1952,10 @@ private:
    * @param oss The output string stream
    * @param format The format string
    */
-  static void format_helper(std::ostringstream &oss, const char *format) {
-    while (*format) {
+  static void format_helper(std::ostringstream &oss, const char *format)
+  {
+    while (*format)
+    {
       oss << *format;
       ++format;
     }
