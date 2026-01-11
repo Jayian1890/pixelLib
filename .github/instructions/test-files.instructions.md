@@ -9,7 +9,7 @@ When writing or modifying unit tests for pixelLib, follow these guidelines:
 ### Test Organization
 1. **One test file per module** - Keep all tests for a module in a single `tests/test_<module>.cc` file
 2. **Logical grouping** - Use `TEST_CASE` for major functionality, `SUBCASE` for variations
-3. **Descriptive names** - Use clear, descriptive test names: `TEST_CASE("ModuleName::function - edge case description")`
+3. **Single word names** - Use canonical test names: `TEST_CASE("ResolveHostnameEmpty")`
 
 ### Test Writing Standards
 1. **Use doctest macros** - Prefer `CHECK` over `REQUIRE` unless test cannot continue on failure

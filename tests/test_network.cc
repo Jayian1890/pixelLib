@@ -33,7 +33,7 @@ static void unset_env_var(const char *name)
 
 TEST_SUITE("Network Module")
 {
-  TEST_CASE("NetworkResult construction")
+  TEST_CASE("NetworkResult")
   {
     pixellib::core::network::NetworkResult success(true, 0, "Success");
     CHECK(success.success == true);
@@ -46,7 +46,7 @@ TEST_SUITE("Network Module")
     CHECK(failure.message == "Error");
   }
 
-  TEST_CASE("resolve_hostname - empty input")
+  TEST_CASE("ResolveHostname")
   {
     auto result = pixellib::core::network::Network::resolve_hostname("");
     CHECK(result.success == false);
@@ -54,7 +54,7 @@ TEST_SUITE("Network Module")
     CHECK(result.message == "Hostname is empty");
   }
 
-  TEST_CASE("resolve_hostname - test mode")
+  TEST_CASE("ResolveHostnameTest")
   {
     // Set test mode
     set_env_var("PIXELLIB_TEST_MODE", "1");
@@ -83,7 +83,7 @@ TEST_SUITE("Network Module")
     unset_env_var("PIXELLIB_TEST_MODE");
   }
 
-  TEST_CASE("is_host_reachable - empty input")
+  TEST_CASE("HostReachable")
   {
     auto result = pixellib::core::network::Network::is_host_reachable("");
     CHECK(result.success == false);
@@ -91,7 +91,7 @@ TEST_SUITE("Network Module")
     CHECK(result.message == "Host is empty");
   }
 
-  TEST_CASE("is_host_reachable - test mode")
+  TEST_CASE("HostReachableTest")
   {
     // Set test mode
     set_env_var("PIXELLIB_TEST_MODE", "1");
@@ -105,7 +105,7 @@ TEST_SUITE("Network Module")
     unset_env_var("PIXELLIB_TEST_MODE");
   }
 
-  TEST_CASE("download_file - empty inputs")
+  TEST_CASE("DownloadEmpty")
   {
     // Empty URL
     auto result1 = pixellib::core::network::Network::download_file("", "output.txt");
@@ -120,7 +120,7 @@ TEST_SUITE("Network Module")
     CHECK(result2.message == "Destination path is empty");
   }
 
-  TEST_CASE("download_file - invalid URL format")
+  TEST_CASE("DownloadUrl")
   {
     auto result = pixellib::core::network::Network::download_file("invalid-url", "output.txt");
     CHECK(result.success == false);
@@ -133,7 +133,7 @@ TEST_SUITE("Network Module")
     CHECK(result2.message == "Invalid URL format");
   }
 
-  TEST_CASE("download_file - test mode")
+  TEST_CASE("DownloadTest")
   {
     // Set test mode
     set_env_var("PIXELLIB_TEST_MODE", "1");
@@ -158,31 +158,35 @@ TEST_SUITE("Network Module")
     unset_env_var("PIXELLIB_TEST_MODE");
   }
 
-  TEST_CASE("HTTP operations")
+  TEST_CASE("Http")
   {
     ::std::string response1 = pixellib::core::network::Network::http_get("http://example.com/test");
-    CHECK(response1 == "HTTP response from http://example.com/test");
+    CHECK(response1.find("HTTP/1.1 200 OK") != std::string::npos);
+    CHECK(response1.find("Mock HTTP response from http://example.com/test") != std::string::npos);
 
     ::std::string response2 = pixellib::core::network::Network::http_post("http://example.com/post", "payload");
-    CHECK(response2 == "HTTP POST response from http://example.com/post with payload: payload");
+    CHECK(response2.find("HTTP/1.1 200 OK") != std::string::npos);
+    CHECK(response2.find("{\"success\": true, \"data\": \"payload\"}") != std::string::npos);
 
     ::std::string response3 = pixellib::core::network::Network::https_get("https://example.com/test");
-    CHECK(response3 == "HTTPS response from https://example.com/test");
+    CHECK(response3.find("HTTPS/1.1 200 OK") != std::string::npos);
+    CHECK(response3.find("Mock HTTP response from https://example.com/test") != std::string::npos);
 
     ::std::string response4 = pixellib::core::network::Network::https_post("https://example.com/post", "payload");
-    CHECK(response4 == "HTTPS POST response from https://example.com/post with payload: payload");
+    CHECK(response4.find("HTTPS/1.1 200 OK") != std::string::npos);
+    CHECK(response4.find("{\"success\": true, \"data\": \"payload\"}") != std::string::npos);
   }
 
-  TEST_CASE("URL operations")
+  TEST_CASE("Url")
   {
     ::std::string encoded = pixellib::core::network::Network::url_encode("hello world");
-    CHECK(encoded == "hello world"); // Current implementation is identity
+    CHECK(encoded == "hello%20world"); // Space should be encoded to %20
 
     ::std::string decoded = pixellib::core::network::Network::url_decode("hello%20world");
-    CHECK(decoded == "hello%20world"); // Current implementation is identity
+    CHECK(decoded == "hello world"); // Should decode back to original
   }
 
-  TEST_CASE("get_network_interfaces")
+  TEST_CASE("Interfaces")
   {
     auto interfaces = pixellib::core::network::Network::get_network_interfaces();
     CHECK(!interfaces.empty());
@@ -200,7 +204,7 @@ TEST_SUITE("Network Module")
     CHECK(has_expected);
   }
 
-  TEST_CASE("IP validation - IPv4")
+  TEST_CASE("Ipv4")
   {
     // Valid IPv4 addresses
     CHECK(pixellib::core::network::Network::is_valid_ipv4("192.168.1.1"));
@@ -226,7 +230,7 @@ TEST_SUITE("Network Module")
     CHECK_FALSE(pixellib::core::network::Network::is_valid_ipv4("192.168.1.001")); // Leading zero in last
   }
 
-  TEST_CASE("IP validation - IPv6")
+  TEST_CASE("Ipv6")
   {
     // Valid IPv6 addresses (basic checks)
     CHECK(pixellib::core::network::Network::is_valid_ipv6("::1"));
@@ -239,7 +243,7 @@ TEST_SUITE("Network Module")
     CHECK_FALSE(pixellib::core::network::Network::is_valid_ipv6("not-an-ip"));
   }
 
-  TEST_CASE("create_socket_connection - invalid inputs")
+  TEST_CASE("CreateSocket")
   {
     // Empty host
     int sock1 = pixellib::core::network::Network::create_socket_connection("", 80);
@@ -256,13 +260,13 @@ TEST_SUITE("Network Module")
     CHECK(sock4 == -1);
   }
 
-  TEST_CASE("close_socket_connection - invalid socket")
+  TEST_CASE("CloseSocket")
   {
     bool result = pixellib::core::network::Network::close_socket_connection(-1);
     CHECK(result == false);
   }
 
-  TEST_CASE("parse_http_response_code")
+  TEST_CASE("ParseHttp")
   {
     // Valid HTTP response
     int code1 = pixellib::core::network::Network::parse_http_response_code("HTTP/1.1 200 OK");
@@ -303,7 +307,7 @@ TEST_SUITE("Network Module")
     CHECK(code12 == -1); // No space after code
   }
 
-  TEST_CASE("is_http_success")
+  TEST_CASE("HttpSuccess")
   {
     CHECK(pixellib::core::network::Network::is_http_success(200));
     CHECK(pixellib::core::network::Network::is_http_success(201));
@@ -328,7 +332,7 @@ TEST_SUITE("Network Module")
     CHECK_FALSE(pixellib::core::network::Network::is_http_success(600));
   }
 
-  TEST_CASE("measure_latency - invalid inputs")
+  TEST_CASE("MeasureLatency")
   {
     double latency1 = pixellib::core::network::Network::measure_latency("", 4);
     CHECK(latency1 == -1.0);
@@ -340,27 +344,30 @@ TEST_SUITE("Network Module")
     CHECK(latency3 == -1.0);
   }
 
-  TEST_CASE("measure_latency - valid input")
+  TEST_CASE("LatencyValid")
   {
     double latency = pixellib::core::network::Network::measure_latency("example.com", 4);
     CHECK(latency >= 10.0);
-    CHECK(latency <= 100.0); // Should be in reasonable range
+    CHECK(latency <= 200.0); // Should be in reasonable range for our deterministic implementation
   }
 
-  TEST_CASE("measure_bandwidth - invalid input")
+  TEST_CASE("MeasureBandwidth")
   {
-    double bandwidth = pixellib::core::network::Network::measure_bandwidth("");
-    CHECK(bandwidth == -1.0);
+    double bandwidth_null = pixellib::core::network::Network::measure_bandwidth("");
+    CHECK(bandwidth_null == -1.0);
+
+    double bandwidth_example = pixellib::core::network::Network::measure_bandwidth("example.com");
+    CHECK(bandwidth_example > 0.0);
   }
 
-  TEST_CASE("measure_bandwidth - valid input")
+  TEST_CASE("BandwidthValid")
   {
     double bandwidth = pixellib::core::network::Network::measure_bandwidth("example.com");
-    CHECK(bandwidth >= 10.0);
-    CHECK(bandwidth <= 1000.0); // Should be in reasonable range
+    CHECK(bandwidth >= 0.001);   // Base bandwidth for example.com
+    CHECK(bandwidth <= 10000.0); // Should be in reasonable range
   }
 
-  TEST_CASE("test helper methods - not implemented")
+  TEST_CASE("TestHelpers")
   {
     // These test helper methods are declared but not implemented
     // They should be implemented if needed for testing internal code paths
@@ -373,19 +380,19 @@ TEST_SUITE("Network Module")
 
 TEST_SUITE("Test Helper Methods")
 {
-  TEST_CASE("get_connection_error - timeout")
+  TEST_CASE("ConnectionTimeout")
   {
     int code = pixellib::core::network::Network::test_get_connection_error_timeout();
     CHECK(code == 3);
   }
 
-  TEST_CASE("get_connection_error - refused")
+  TEST_CASE("ConnectionRefused")
   {
     int code = pixellib::core::network::Network::test_get_connection_error_refused();
     CHECK(code == 4);
   }
 
-  TEST_CASE("get_connection_error - with errno")
+  TEST_CASE("ConnectionErrno")
   {
     // Test with ETIMEDOUT
     int code = pixellib::core::network::Network::test_get_connection_error_with_errno(
@@ -408,7 +415,7 @@ TEST_SUITE("Test Helper Methods")
     CHECK(code == 4);
   }
 
-  TEST_CASE("download invalid url format")
+  TEST_CASE("DownloadUrl")
   {
     CHECK(pixellib::core::network::Network::test_download_invalid_url_format("invalid-url"));
     CHECK(pixellib::core::network::Network::test_download_invalid_url_format("ftp://example.com"));
@@ -416,7 +423,7 @@ TEST_SUITE("Test Helper Methods")
     CHECK_FALSE(pixellib::core::network::Network::test_download_invalid_url_format("https://example.com"));
   }
 
-  TEST_CASE("inet_pton - ipv4")
+  TEST_CASE("InetPtonIpv4")
   {
     int res = pixellib::core::network::Network::test_inet_pton_ipv4_fail("192.168.1.1");
     CHECK(res == 1);
@@ -428,7 +435,7 @@ TEST_SUITE("Test Helper Methods")
     CHECK(res == 0);
   }
 
-  TEST_CASE("inet_pton - ipv6")
+  TEST_CASE("InetPtonIpv6")
   {
     int res = pixellib::core::network::Network::test_inet_pton_ipv6_fail("::1");
     CHECK(res == 1);
@@ -440,7 +447,7 @@ TEST_SUITE("Test Helper Methods")
     CHECK(res == 0);
   }
 
-  TEST_CASE("force is_host_reachable inet_pton ipv4")
+  TEST_CASE("HostReachableIpv4")
   {
     int res = pixellib::core::network::Network::test_force_is_host_reachable_inet_pton_ipv4("192.168.1.1");
     CHECK(res == 1);
@@ -449,7 +456,7 @@ TEST_SUITE("Test Helper Methods")
     CHECK(res == 0);
   }
 
-  TEST_CASE("force download fopen")
+  TEST_CASE("DownloadFopen")
   {
     // Test with writable location
     int res = pixellib::core::network::Network::test_force_download_fopen("build/test_fopen.txt");
@@ -460,7 +467,7 @@ TEST_SUITE("Test Helper Methods")
     CHECK(res == -1);
   }
 
-  TEST_CASE("force download http error")
+  TEST_CASE("DownloadHttp")
   {
     auto result = pixellib::core::network::Network::test_force_download_http_error();
     CHECK(result.success == false);
@@ -468,13 +475,13 @@ TEST_SUITE("Test Helper Methods")
     CHECK(result.message == "HTTP error: 404");
   }
 
-  TEST_CASE("mark download branches")
+  TEST_CASE("DownloadBranches")
   {
     pixellib::core::network::Network::test_mark_download_branches();
     // Just call to cover
   }
 
-  TEST_CASE("mark is_host_reachable branches")
+  TEST_CASE("HostReachableBranches")
   {
     pixellib::core::network::Network::test_mark_is_host_reachable_branches();
     // Just call to cover

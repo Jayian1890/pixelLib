@@ -60,7 +60,7 @@ TEST_SUITE("FileSystem Module")
     FileSystem::remove(path);
   }
 
-  TEST_CASE("read_write_and_exists")
+  TEST_CASE("ReadWrite")
   {
     std::string dir = make_temp_dir();
     REQUIRE(!dir.empty());
@@ -79,7 +79,7 @@ TEST_SUITE("FileSystem Module")
     CHECK(FileSystem::remove(dir));
   }
 
-  TEST_CASE("create_directories_and_directory_iterator")
+  TEST_CASE("Directories")
   {
     std::string dir = make_temp_dir();
     REQUIRE(!dir.empty());
@@ -100,7 +100,7 @@ TEST_SUITE("FileSystem Module")
     remove_dir_tree(dir);
   }
 
-  TEST_CASE("copy_and_rename")
+  TEST_CASE("CopyRename")
   {
     std::string dir = make_temp_dir();
     REQUIRE(!dir.empty());
@@ -118,7 +118,7 @@ TEST_SUITE("FileSystem Module")
     remove_dir_tree(dir);
   }
 
-  TEST_CASE("temp_and_current_path")
+  TEST_CASE("TempPath")
   {
     std::string tmp = FileSystem::temp_directory_path();
     CHECK(!tmp.empty());
@@ -137,7 +137,7 @@ TEST_SUITE("FileSystem Module")
     remove_dir_tree(dir);
   }
 
-  TEST_CASE("last_write_time")
+  TEST_CASE("WriteTime")
   {
     std::string dir = make_temp_dir();
     REQUIRE(!dir.empty());
@@ -154,7 +154,7 @@ TEST_SUITE("FileSystem Module")
     remove_dir_tree(dir);
   }
 
-  TEST_CASE("create_directory_single_level")
+  TEST_CASE("Directory")
   {
     std::string dir = make_temp_dir();
     REQUIRE(!dir.empty());
@@ -166,7 +166,7 @@ TEST_SUITE("FileSystem Module")
     remove_dir_tree(dir);
   }
 
-  TEST_CASE("error_handling")
+  TEST_CASE("ErrorHandling")
   {
     std::string content = FileSystem::read_file("nonexistent_file_xyz123.txt");
     CHECK(content.empty());

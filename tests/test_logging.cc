@@ -88,7 +88,7 @@ TEST_SUITE("Logging Module")
     }
   };
 
-  TEST_CASE("log_level_to_string_and_formatters")
+  TEST_CASE("LogLevel")
   {
     CHECK(std::string(log_level_to_string(LOG_TRACE)) == "TRACE");
     CHECK(std::string(log_level_to_string(LOG_ERROR)) == "ERROR");
@@ -112,7 +112,7 @@ TEST_SUITE("Logging Module")
     CHECK(std::string(log_level_to_string(static_cast<LogLevel>(999))) == "UNKNOWN");
   }
 
-  TEST_CASE("default_formatter_timestamp_variants")
+  TEST_CASE("FormatterTimestamps")
   {
     std::tm tm{};
     DefaultLogFormatter df_std(TimestampFormat::STANDARD, "");
@@ -126,7 +126,7 @@ TEST_SUITE("Logging Module")
     CHECK(s3.find("[INFO]") != std::string::npos);
   }
 
-  TEST_CASE("json_formatter_escaping_more_cases")
+  TEST_CASE("JsonEscaping")
   {
     JSONLogFormatter jf;
     std::tm tm{};
@@ -137,7 +137,7 @@ TEST_SUITE("Logging Module")
     CHECK(j.find("\\\\") != std::string::npos);
   }
 
-  TEST_CASE("stream_sink_and_stream_state_handling")
+  TEST_CASE("StreamSink")
   {
     std::ostringstream out;
     StreamSink sink(out);
@@ -148,7 +148,7 @@ TEST_SUITE("Logging Module")
     sink.write("world");
   }
 
-  TEST_CASE("async_log_sink_queue_and_dropping")
+  TEST_CASE("AsyncSink")
   {
     std::ostringstream out;
     auto inner = std::make_unique<StreamSink>(out);
@@ -166,7 +166,7 @@ TEST_SUITE("Logging Module")
     async.shutdown();
   }
 
-  TEST_CASE("logger_output_and_configuration")
+  TEST_CASE("LoggerOutput")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
@@ -193,7 +193,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("default_formatter_filename_extraction_and_context")
+  TEST_CASE("FormatterContext")
   {
     DefaultLogFormatter df(TimestampFormat::NONE, "");
     std::tm tm{};
@@ -210,7 +210,7 @@ TEST_SUITE("Logging Module")
     }
   }
 
-  TEST_CASE("logger_with_sinks_and_category_config")
+  TEST_CASE("LoggerSinks")
   {
     std::ostringstream out;
     // Build a global config with a stream sink
@@ -231,7 +231,7 @@ TEST_SUITE("Logging Module")
     pixellib::core::logging::Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("per_category_registry_and_level_filtering")
+  TEST_CASE("CategoryFiltering")
   {
     std::ostringstream out;
     pixellib::core::logging::Logger::LoggerConfigBuilder b;
@@ -259,7 +259,7 @@ TEST_SUITE("Logging Module")
     CHECK(j.find("\\n") != std::string::npos);  // escaped newline
   }
 
-  TEST_CASE("async_drop_oldest_and_metrics")
+  TEST_CASE("AsyncDrop")
   {
     std::ostringstream out;
     // slow inner sink to force queue buildup
@@ -287,7 +287,7 @@ TEST_SUITE("Logging Module")
     pixellib::core::logging::Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("test_helpers_clear_and_error_messages")
+  TEST_CASE("TestHelpers")
   {
     std::ostringstream s;
     s.setstate(std::ios::badbit);
@@ -298,7 +298,7 @@ TEST_SUITE("Logging Module")
     pixellib::core::logging::test_force_logging_error_messages("err-msg");
   }
 
-  TEST_CASE("rotating_file_logger_size_and_time_rotation")
+  TEST_CASE("RotatingRotation")
   {
     namespace fs = std::filesystem;
     std::string base = "build/tmp/testlog";
@@ -366,7 +366,7 @@ TEST_SUITE("Logging Module")
     }
   }
 
-  TEST_CASE("rotating_file_logger_open_failure_falls_back")
+  TEST_CASE("RotatingFailure")
   {
     // Opening a directory as a file should fail; write() should fallback to cerr path.
     namespace fs = std::filesystem;
@@ -375,7 +375,7 @@ TEST_SUITE("Logging Module")
     rf.write("should-fallback");
   }
 
-  TEST_CASE("async_inner_sink_exception_swallowed")
+  TEST_CASE("AsyncException")
   {
     auto inner = std::make_unique<ThrowingSinkNonStd>();
     pixellib::core::logging::AsyncLogSink async(std::move(inner), 8, pixellib::core::logging::AsyncLogSink::DropPolicy::DROP_NEWEST);
@@ -384,7 +384,7 @@ TEST_SUITE("Logging Module")
     async.shutdown();
   }
 
-  TEST_CASE("macros_and_logger_overloads_and_stream_clear")
+  TEST_CASE("MacrosOverloads")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
@@ -409,7 +409,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("log_context_storage_get_and_remove")
+  TEST_CASE("ContextStorage")
   {
     pixellib::core::logging::LogContextStorage::set("k1", "v1");
     CHECK(pixellib::core::logging::LogContextStorage::get("k1") == "v1");
@@ -423,7 +423,7 @@ TEST_SUITE("Logging Module")
     CHECK(pixellib::core::logging::LogContextStorage::get("k2") == "");
   }
 
-  TEST_CASE("logger_string_overloads_and_file_line_overloads")
+  TEST_CASE("LoggerOverloads")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
@@ -445,7 +445,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("logger_set_formatter_and_formatter_branches")
+  TEST_CASE("SetFormatter")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
@@ -467,7 +467,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("logger_sink_exception_clears_stream")
+  TEST_CASE("SinkException")
   {
     AlwaysFailBuf buf;
     std::ostream failing(&buf);
@@ -485,7 +485,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("logger_output_stream_exception_catch_blocks")
+  TEST_CASE("OutputException")
   {
     AlwaysFailBuf out_buf;
     AlwaysFailBuf err_buf;
@@ -509,7 +509,7 @@ TEST_SUITE("Logging Module")
     err.exceptions(std::ios::goodbit);
   }
 
-  TEST_CASE("structured_log_early_exit_and_sink_exception_paths")
+  TEST_CASE("StructuredLog")
   {
     // Ensure formatter is cleared so the structured-log sink paths are used.
     Logger::LoggerConfig empty;
@@ -532,7 +532,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("category_logger_formatter_and_exception_paths")
+  TEST_CASE("CategoryFormatter")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
@@ -561,7 +561,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("logger_add_sink_and_sink_exception_paths")
+  TEST_CASE("AddSink")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
@@ -585,7 +585,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("logger_output_stream_path_and_exception_handling")
+  TEST_CASE("OutputStream")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
@@ -605,7 +605,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("category_logger_fallback_and_exception_paths")
+  TEST_CASE("CategoryFallback")
   {
     // Ensure global sinks empty so category logger falls back to output streams.
     Logger::LoggerConfig empty;
@@ -627,7 +627,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("format_and_log_with_format_string_branches")
+  TEST_CASE("FormatLog")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
@@ -654,7 +654,7 @@ TEST_SUITE("Logging Module")
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
-  TEST_CASE("logger_file_logging_overloads_and_async_queue_size")
+  TEST_CASE("FileLogging")
   {
     namespace fs = std::filesystem;
     fs::create_directories("build/tmp");
@@ -691,7 +691,7 @@ TEST_SUITE("Logging Module")
     fs::remove(f2, ec);
   }
 
-  TEST_CASE("async_block_policy_and_queue_metrics")
+  TEST_CASE("BlockPolicy")
   {
     std::ostringstream out;
     auto slow = std::make_unique<SlowSink>(out, std::chrono::milliseconds(80));
@@ -711,7 +711,7 @@ TEST_SUITE("Logging Module")
     async.shutdown();
   }
 
-  TEST_CASE("config_builder_file_and_async_variants_and_registry")
+  TEST_CASE("ConfigBuilder")
   {
     std::ostringstream out;
     // add file sink using builder (writes to build/tmp/testbuilder.log)

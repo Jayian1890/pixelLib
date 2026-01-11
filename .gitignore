@@ -54,3 +54,5 @@ cmake_install.cmake
 compile_commands.json
 cmake_output.txt
 default.profraw
+test.txt
+debug_url2

@@ -8,7 +8,7 @@
 
 TEST_SUITE("JSON Module")
 {
-  TEST_CASE("parse_literals_and_types")
+  TEST_CASE("ParseLiterals")
   {
     pixellib::core::json::JSON v;
     CHECK(pixellib::core::json::JSON::parse("null", v) == true);
@@ -23,7 +23,7 @@ TEST_SUITE("JSON Module")
     CHECK(v.as_bool() == false);
   }
 
-  TEST_CASE("parse_numbers_and_number_helpers")
+  TEST_CASE("ParseNumbers")
   {
     pixellib::core::json::JSON v;
     CHECK(pixellib::core::json::JSON::parse("42", v));
@@ -42,7 +42,7 @@ TEST_SUITE("JSON Module")
     CHECK(v.as_number().to_double() == 1000.0);
   }
 
-  TEST_CASE("parse_strings_and_escapes")
+  TEST_CASE("ParseStrings")
   {
     pixellib::core::json::JSON v;
     CHECK(pixellib::core::json::JSON::parse("\"hello\\nworld\"", v));
@@ -56,7 +56,7 @@ TEST_SUITE("JSON Module")
     CHECK(v.as_string().size() >= 4);
   }
 
-  TEST_CASE("parse_arrays_and_objects")
+  TEST_CASE("ParseArrays")
   {
     pixellib::core::json::JSON v;
     CHECK(pixellib::core::json::JSON::parse("[1, 2, 3]", v));
@@ -76,7 +76,7 @@ TEST_SUITE("JSON Module")
     CHECK(p->as_array().size() == 2);
   }
 
-  TEST_CASE("parse_errors_and_messages")
+  TEST_CASE("ParseErrors")
   {
     pixellib::core::json::JSON v;
     pixellib::core::json::JsonError err;
@@ -92,7 +92,7 @@ TEST_SUITE("JSON Module")
     CHECK_THROWS_AS(pixellib::core::json::JSON::parse_or_throw("{invalid}"), std::invalid_argument);
   }
 
-  TEST_CASE("stringify_and_escape_options")
+  TEST_CASE("Stringify")
   {
     pixellib::core::json::JSON obj = pixellib::core::json::JSON::object(pixellib::core::json::JSON::object_t{
         {"k1", pixellib::core::json::JSON(std::string("v1"))},
@@ -110,7 +110,7 @@ TEST_SUITE("JSON Module")
     CHECK(escaped.find("\\/") != std::string::npos);
   }
 
-  TEST_CASE("validate_and_parse_or_throw")
+  TEST_CASE("Validate")
   {
     CHECK(pixellib::core::json::JSON::validate("{\"x\": 1}"));
     CHECK_FALSE(pixellib::core::json::JSON::validate("{\"x\": }"));
@@ -118,7 +118,7 @@ TEST_SUITE("JSON Module")
     CHECK_NOTHROW(pixellib::core::json::JSON::parse_or_throw("[true,false]"));
   }
 
-  TEST_CASE("number_conversion_fallbacks")
+  TEST_CASE("NumberConversion")
   {
 
     pixellib::core::json::JSON n = pixellib::core::json::JSON::number("notanumber");
@@ -132,7 +132,7 @@ TEST_SUITE("JSON Module")
     CHECK_FALSE(frac.as_number().is_integral());
   }
 
-  TEST_CASE("unicode_escape_error_cases")
+  TEST_CASE("UnicodeErrors")
   {
     pixellib::core::json::JSON v;
     pixellib::core::json::JsonError err;

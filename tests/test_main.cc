@@ -54,6 +54,6 @@ TEST_SUITE("Sanity Checks")
     CHECK(r3.find("https://example/test") != std::string::npos);
 
     std::string r4 = pixellib::core::network::Network::https_post("https://example/post", "p");
-    CHECK(r4.find("p") != std::string::npos);
+    CHECK(r4.find('p') != std::string::npos);
   }
 }
