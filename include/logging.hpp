@@ -1528,7 +1528,10 @@ public:
    *
    * @param message The warning message to log
    */
-  static void warning(const std::string &message) { log(LOG_WARNING, message); }
+  static void warning(const std::string &message)
+  {
+    log(LOG_WARNING, message);
+  }
 
   /**
    * @brief Log a warning message with file and line information
@@ -1537,7 +1540,8 @@ public:
    * @param file The source file name (typically __FILE__)
    * @param line The source line number (typically __LINE__)
    */
-  static void warning(const std::string &message, const char *file, int line) {
+  static void warning(const std::string &message, const char *file, int line)
+  {
     log(LOG_WARNING, message, file, line);
   }
 
@@ -1546,7 +1550,10 @@ public:
    *
    * @param message The error message to log
    */
-  static void error(const std::string &message) { log(LOG_ERROR, message); }
+  static void error(const std::string &message)
+  {
+    log(LOG_ERROR, message);
+  }
 
   /**
    * @brief Log an error message with file and line information
@@ -1555,7 +1562,8 @@ public:
    * @param file The source file name (typically __FILE__)
    * @param line The source line number (typically __LINE__)
    */
-  static void error(const std::string &message, const char *file, int line) {
+  static void error(const std::string &message, const char *file, int line)
+  {
     log(LOG_ERROR, message, file, line);
   }
 
