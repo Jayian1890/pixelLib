@@ -22,10 +22,17 @@ namespace logging = pixellib::core::logging;
 using logging::AsyncLogSink;
 using logging::DefaultLogFormatter;
 using logging::JSONLogFormatter;
+using logging::LOG_DEBUG;
+using logging::LOG_ERROR;
+using logging::LOG_FATAL;
+using logging::LOG_INFO;
 using logging::log_level_to_string;
+using logging::LOG_TRACE;
+using logging::LOG_WARNING;
 using logging::LogContext;
-using logging::LogContextStorage;
+namespace LogContextStorage = logging::LogContextStorage;
 using logging::Logger;
+using logging::LogLevel;
 using logging::RotatingFileLogger;
 using logging::StreamSink;
 using logging::TimestampFormat;
@@ -49,31 +56,37 @@ TEST_SUITE("Logging Module")
   class ThrowingSinkStdException : public pixellib::core::logging::LogSink
   {
   public:
-    void write(const std::string &) override
+    void write(const std::string &message) override
     {
+      static_cast<void>(message);
       throw std::runtime_error("boom");
     }
+  };
+
+  struct NonStdThrowable
+  {
   };
 
   class ThrowingSinkNonStd : public pixellib::core::logging::LogSink
   {
   public:
-    void write(const std::string &) override
+    void write(const std::string &message) override
     {
-      throw 1;
+      static_cast<void>(message);
+      // NOLINTNEXTLINE(hicpp-exception-baseclass)
+      throw NonStdThrowable{};
     }
   };
 
   class AlwaysFailBuf : public std::streambuf
   {
   protected:
-    int overflow(int) override
+    int overflow(int ch) override
     {
+      static_cast<void>(ch);
       return traits_type::eof();
     }
   };
-
-  using namespace pixellib::core::logging;
 
   TEST_CASE("log_level_to_string_and_formatters")
   {
@@ -295,7 +308,9 @@ TEST_SUITE("Logging Module")
     {
       std::string p = base + (i == 0 ? "" : ("." + std::to_string(i)));
       if (fs::exists(p))
+      {
         fs::remove(p);
+      }
     }
 
     // Size-based rotation: very small max size so rotation happens quickly
@@ -320,7 +335,9 @@ TEST_SUITE("Logging Module")
     {
       std::string p = tbase + (i == 0 ? "" : ("." + std::to_string(i)));
       if (fs::exists(p))
+      {
         fs::remove(p);
+      }
     }
     pixellib::core::logging::RotatingFileLogger rft(tbase, std::chrono::hours(0), 2);
     rft.write("t1");
@@ -335,13 +352,17 @@ TEST_SUITE("Logging Module")
     {
       std::string p = base + (i == 0 ? "" : ("." + std::to_string(i)));
       if (fs::exists(p))
+      {
         fs::remove(p);
+      }
     }
     for (int i = 0; i < 5; ++i)
     {
       std::string p = tbase + (i == 0 ? "" : ("." + std::to_string(i)));
       if (fs::exists(p))
+      {
         fs::remove(p);
+      }
     }
   }
 
@@ -658,7 +679,9 @@ TEST_SUITE("Logging Module")
     b.set_level(LOG_INFO).add_async_stream_sink(out, 16, AsyncLogSink::DropPolicy::DROP_NEWEST);
     Logger::configure(b.build());
     for (int i = 0; i < 10; ++i)
+    {
       Logger::info(std::string("q") + std::to_string(i));
+    }
     CHECK(Logger::get_async_queue_size() >= 0);
     Logger::async_flush();
     Logger::async_shutdown();
@@ -676,7 +699,9 @@ TEST_SUITE("Logging Module")
 
     // fill queue quickly; some writes may time out and be counted as dropped
     for (int i = 0; i < 5; ++i)
+    {
       async.write(std::string("b") + std::to_string(i));
+    }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
     size_t dropped = async.dropped_count();
