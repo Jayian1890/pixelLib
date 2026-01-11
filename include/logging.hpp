@@ -163,7 +163,8 @@ public:
 /**
  * @brief File logger with rotation capabilities
  */
-class RotatingFileLogger : public LogSink {
+class RotatingFileLogger : public LogSink
+{
 private:
   std::string base_filename_;
   std::ofstream current_file_;
@@ -182,12 +183,10 @@ public:
    * @param max_file_size Maximum size of each log file (in bytes)
    * @param max_files Maximum number of log files to keep
    */
-  RotatingFileLogger(const std::string &base_filename,
-                     size_t max_file_size = 10485760, int max_files = 5)
-      : base_filename_(base_filename), max_file_size_(max_file_size),
-        max_files_(max_files), strategy_(RotationStrategy::SIZE),
-        last_rotation_(std::chrono::steady_clock::now()),
-        rotation_interval_(std::chrono::hours(24)), current_file_size_(0) {
+  RotatingFileLogger(const std::string &base_filename, size_t max_file_size = 10485760, int max_files = 5)
+      : base_filename_(base_filename), max_file_size_(max_file_size), max_files_(max_files), strategy_(RotationStrategy::SIZE), last_rotation_(std::chrono::steady_clock::now()),
+        rotation_interval_(std::chrono::hours(24)), current_file_size_(0)
+  {
     open_current_file();
   }
 
@@ -198,12 +197,10 @@ public:
    * @param rotation_hours Hours between log rotations
    * @param max_files Maximum number of log files to keep
    */
-  RotatingFileLogger(const std::string &base_filename,
-                     std::chrono::hours rotation_hours, int max_files = 5)
-      : base_filename_(base_filename), max_file_size_(0), max_files_(max_files),
-        strategy_(RotationStrategy::TIME),
-        last_rotation_(std::chrono::steady_clock::now()),
-        rotation_interval_(rotation_hours), current_file_size_(0) {
+  RotatingFileLogger(const std::string &base_filename, std::chrono::hours rotation_hours, int max_files = 5)
+      : base_filename_(base_filename), max_file_size_(0), max_files_(max_files), strategy_(RotationStrategy::TIME), last_rotation_(std::chrono::steady_clock::now()),
+        rotation_interval_(rotation_hours), current_file_size_(0)
+  {
     open_current_file();
   }
 
