@@ -1,22 +1,23 @@
 #include "../include/network.hpp"
 #include "../third-party/doctest/doctest.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <iterator>
 #include <string>
+#include <unistd.h>
 
-using namespace pixellib::core::network;
-
-TEST_SUITE("network_module")
+TEST_SUITE("Network Module")
 {
   TEST_CASE("NetworkResult construction")
   {
-    NetworkResult success(true, 0, "Success");
+    pixellib::core::network::NetworkResult success(true, 0, "Success");
     CHECK(success.success == true);
     CHECK(success.error_code == 0);
     CHECK(success.message == "Success");
 
-    NetworkResult failure(false, 1, "Error");
+    pixellib::core::network::NetworkResult failure(false, 1, "Error");
     CHECK(failure.success == false);
     CHECK(failure.error_code == 1);
     CHECK(failure.message == "Error");
