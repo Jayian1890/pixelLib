@@ -209,22 +209,26 @@ public:
    *
    * @param message The message to write
    */
-  void write(const std::string &message) {
-    try {
-      if (!current_file_.is_open()) {
+  void write(const std::string &message)
+  {
+    try
+    {
+      if (!current_file_.is_open())
+      {
         // Try to reopen the file
         open_current_file();
-        if (!current_file_.is_open()) {
+        if (!current_file_.is_open())
+        {
           // If we still can't open the file, fall back to cerr
-          std::cerr << "Failed to open log file: " << base_filename_
-                    << std::endl;
+          std::cerr << "Failed to open log file: " << base_filename_ << std::endl;
           std::cerr << message << std::endl;
           return;
         }
       }
 
       // Check if we need to rotate (considering the upcoming write size)
-      if (should_rotate(message.length() + 1)) {
+      if (should_rotate(message.length() + 1))
+      {
         rotate();
       }
 
@@ -232,20 +236,26 @@ public:
       current_file_.flush();
 
       // Update file size for size-based rotation
-      if (strategy_ == RotationStrategy::SIZE) {
+      if (strategy_ == RotationStrategy::SIZE)
+      {
         current_file_size_ += message.length() + 1; // +1 for newline
       }
 
       // Check if the stream is in a good state
-      if (!current_file_.good()) {
+      if (!current_file_.good())
+      {
         // If the stream is not good, try to reset it
         current_file_.clear();
       }
-    } catch (const std::exception &e) {
+    }
+    catch (const std::exception &e)
+    {
       // If we can't write to the file, try to write to cerr as a fallback
       std::cerr << "File logging error: " << e.what() << std::endl;
       std::cerr << message << std::endl;
-    } catch (...) {
+    }
+    catch (...)
+    {
       // If we can't write to the file, try to write to cerr as a fallback
       std::cerr << "Unknown file logging error occurred" << std::endl;
       std::cerr << message << std::endl;
@@ -253,22 +263,33 @@ public:
   }
 
   // Test helpers to modify internal state for unit tests
-  void test_set_badbit() { current_file_.setstate(std::ios::badbit); }
-  void test_clear_badbit() { current_file_.clear(); }
+  void test_set_badbit()
+  {
+    current_file_.setstate(std::ios::badbit);
+  }
+  void test_clear_badbit()
+  {
+    current_file_.clear();
+  }
 
 private:
   /**
    * @brief Open the current log file
    */
-  void open_current_file() {
-    try {
+  void open_current_file()
+  {
+    try
+    {
       current_file_.open(base_filename_, std::ios::app);
-      if (current_file_.is_open() && strategy_ == RotationStrategy::SIZE) {
+      if (current_file_.is_open() && strategy_ == RotationStrategy::SIZE)
+      {
         // Get current file size
         current_file_.seekp(0, std::ios::end);
         current_file_size_ = current_file_.tellp();
       }
-    } catch (const std::exception &e) {
+    }
+    catch (const std::exception &e)
+    {
       std::cerr << "Error opening log file: " << e.what() << std::endl;
     }
   }
@@ -281,18 +302,24 @@ private:
   // Determine whether a rotation is required. For size-based rotation,
   // the optional next_write_size parameter allows deciding based on the size
   // of the next write so we rotate before exceeding the limit.
-  bool should_rotate(size_t next_write_size = 0) {
-    try {
-      if (strategy_ == RotationStrategy::SIZE) {
+  bool should_rotate(size_t next_write_size = 0)
+  {
+    try
+    {
+      if (strategy_ == RotationStrategy::SIZE)
+      {
         // Rotate if the next write would exceed the maximum file size
         return (current_file_size_ + next_write_size) >= max_file_size_;
-      } else { // TIME strategy
+      }
+      else
+      { // TIME strategy
         auto now = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::hours>(
-            now - last_rotation_);
+        auto elapsed = std::chrono::duration_cast<std::chrono::hours>(now - last_rotation_);
         return elapsed >= rotation_interval_;
       }
-    } catch (...) {
+    }
+    catch (...)
+    {
       // If there's an error checking rotation, default to not rotating
       return false;
     }
@@ -301,12 +328,15 @@ private:
   /**
    * @brief Rotate the log files
    */
-  void rotate() {
-    try {
+  void rotate()
+  {
+    try
+    {
       current_file_.close();
 
       // Rename existing files
-      for (int i = max_files_ - 1; i > 0; --i) {
+      for (int i = max_files_ - 1; i > 0; --i)
+      {
         std::string old_name = base_filename_ + "." + std::to_string(i);
         std::string new_name = base_filename_ + "." + std::to_string(i + 1);
 
@@ -325,7 +355,9 @@ private:
       open_current_file();
       current_file_size_ = 0;
       last_rotation_ = std::chrono::steady_clock::now();
-    } catch (const std::exception &e) {
+    }
+    catch (const std::exception &e)
+    {
       std::cerr << "Error rotating log files: " << e.what() << std::endl;
       // Try to reopen the current file
       open_current_file();
@@ -336,27 +368,34 @@ private:
 /**
  * @brief Stream sink for writing to std::ostream
  */
-class StreamSink : public LogSink {
+class StreamSink : public LogSink
+{
 private:
   std::ostream *out_;
+
 public:
   explicit StreamSink(std::ostream &out) : out_(&out) {}
-  void write(const std::string &message) override {
-    if (!out_) {
+  void write(const std::string &message) override
+  {
+    if (!out_)
+    {
       std::cerr << message << std::endl;
       return;
     }
     // Attempt to write to the provided stream; let exceptions propagate to caller
     (*out_) << message << std::endl;
     // If the stream is not in a good state, try to clear it (recover)
-    if (!out_->good()) {
+    if (!out_->good())
+    {
       out_->clear();
     }
   }
 
   // Attempt to clear the underlying stream state (used when an exception is caught)
-  void clear_stream() {
-    if (out_) {
+  void clear_stream()
+  {
+    if (out_)
+    {
       out_->clear();
     }
   }
