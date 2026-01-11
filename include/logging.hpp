@@ -870,7 +870,8 @@ public:
    *
    * @param level The minimum LogLevel to display
    */
-  static void set_level(LogLevel level) {
+  static void set_level(LogLevel level)
+  {
     std::lock_guard<std::mutex> lock(log_mutex);
     current_level = level;
   }
@@ -883,7 +884,8 @@ public:
    * @param output The output stream for LOG_INFO and LOG_DEBUG messages
    * @param error The output stream for LOG_WARNING and LOG_ERROR messages
    */
-  static void set_output_streams(std::ostream &output, std::ostream &error) {
+  static void set_output_streams(std::ostream &output, std::ostream &error)
+  {
     std::lock_guard<std::mutex> lock(log_mutex);
     output_stream = &output;
     error_stream = &error;
@@ -896,7 +898,8 @@ public:
   /**
    * @brief Add a custom sink for logging
    */
-  static void add_sink(std::unique_ptr<LogSink> sink) {
+  static void add_sink(std::unique_ptr<LogSink> sink)
+  {
     std::lock_guard<std::mutex> lock(log_mutex);
     sinks.emplace_back(std::move(sink));
   }
@@ -924,9 +927,8 @@ public:
    * @param max_file_size Maximum size of each log file (in bytes)
    * @param max_files Maximum number of log files to keep
    */
-  static void set_file_logging(const std::string &filename,
-                               size_t max_file_size = 10485760,
-                               int max_files = 5) {
+  static void set_file_logging(const std::string &filename, size_t max_file_size = 10485760, int max_files = 5)
+  {
     std::lock_guard<std::mutex> lock(log_mutex);
     // Use sinks to own the rotating file logger
     sinks.clear();
