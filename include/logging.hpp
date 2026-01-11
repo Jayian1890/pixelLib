@@ -707,52 +707,70 @@ public:
   }
 
 private:
-  std::string escape_json(const std::string &s) {
+  std::string escape_json(const std::string &s)
+  {
     std::string escaped;
-    for (char c : s) {
-      switch (c) {
-      case '"': escaped += "\\\""; break;
-      case '\\': escaped += "\\\\"; break;
-      case '\n': escaped += "\\n"; break;
-      case '\r': escaped += "\\r"; break;
-      case '\t': escaped += "\\t"; break;
-      default: escaped += c; break;
+    for (char c : s)
+    {
+      switch (c)
+      {
+      case '"':
+        escaped += "\\\"";
+        break;
+      case '\\':
+        escaped += "\\\\";
+        break;
+      case '\n':
+        escaped += "\\n";
+        break;
+      case '\r':
+        escaped += "\\r";
+        break;
+      case '\t':
+        escaped += "\\t";
+        break;
+      default:
+        escaped += c;
+        break;
       }
     }
     return escaped;
   }
 };
-class DefaultLogFormatter : public LogFormatter {
+class DefaultLogFormatter : public LogFormatter
+{
 private:
   TimestampFormat timestamp_format_;
   std::string prefix_;
 
 public:
-  DefaultLogFormatter(TimestampFormat format = TimestampFormat::STANDARD,
-                      const std::string &prefix = "")
-      : timestamp_format_(format), prefix_(prefix) {}
+  DefaultLogFormatter(TimestampFormat format = TimestampFormat::STANDARD, const std::string &prefix = "") : timestamp_format_(format), prefix_(prefix) {}
 
-  std::string format(LogLevel level, const std::string &message,
-                     const std::tm &time_info, const char *file = nullptr,
-                     int line = 0) override {
+  std::string format(LogLevel level, const std::string &message, const std::tm &time_info, const char *file = nullptr, int line = 0) override
+  {
     std::ostringstream oss;
 
     // Add prefix if specified
-    if (!prefix_.empty()) {
+    if (!prefix_.empty())
+    {
       oss << prefix_ << " ";
     }
 
     // Add timestamp based on format
-    switch (timestamp_format_) {
-    case TimestampFormat::STANDARD: {
+    switch (timestamp_format_)
+    {
+    case TimestampFormat::STANDARD:
+    {
       oss << "[" << std::put_time(&time_info, "%Y-%m-%d %H:%M:%S") << "] ";
       break;
     }
-    case TimestampFormat::ISO8601: {
+    case TimestampFormat::ISO8601:
+    {
       oss << "[" << std::put_time(&time_info, "%Y-%m-%dT%H:%M:%SZ") << "] ";
       break;
     }
-    case TimestampFormat::UNIX: {
+    case TimestampFormat::UNIX:
+    {
       // This would require getting the time_t value, so we'll skip for now
       oss << "[" << std::put_time(&time_info, "%Y-%m-%d %H:%M:%S") << "] ";
       break;
@@ -770,19 +788,24 @@ public:
 
     // Add context key-value pairs
     const auto &context = LogContextStorage::get_all();
-    if (!context.empty()) {
+    if (!context.empty())
+    {
       oss << " |";
-      for (const auto &kv : context) {
+      for (const auto &kv : context)
+      {
         oss << " " << kv.first << "=" << kv.second;
       }
     }
 
     // Add file and line information if provided
-    if (file && line > 0) {
+    if (file && line > 0)
+    {
       // Extract just the filename from the full path
       const char *filename = file;
-      for (const char *p = file; *p; ++p) {
-        if (*p == '/' || *p == '\\') {
+      for (const char *p = file; *p; ++p)
+      {
+        if (*p == '/' || *p == '\\')
+        {
           filename = p + 1;
         }
       }
@@ -828,18 +851,16 @@ public:
  * rotation, 7 files
  * @endcode
  */
-class Logger {
+class Logger
+{
 private:
-  static LogLevel current_level; ///< Current minimum log level
-  static std::mutex log_mutex;   ///< Mutex for thread safety
-  static std::ostream
-      *output_stream; ///< Output stream for LOG_INFO and LOG_DEBUG messages
-  static std::ostream
-      *error_stream; ///< Output stream for LOG_WARNING and LOG_ERROR messages
-  static std::vector<std::unique_ptr<LogSink>> sinks; ///< Pluggable sinks (stream/file/etc)
-  static std::unique_ptr<LogFormatter> formatter; ///< Custom log formatter
-  static std::unique_ptr<RotatingFileLogger>
-      file_logger; ///< File logger with rotation (kept for compatibility)
+  static LogLevel current_level;                          ///< Current minimum log level
+  static std::mutex log_mutex;                            ///< Mutex for thread safety
+  static std::ostream *output_stream;                     ///< Output stream for LOG_INFO and LOG_DEBUG messages
+  static std::ostream *error_stream;                      ///< Output stream for LOG_WARNING and LOG_ERROR messages
+  static std::vector<std::unique_ptr<LogSink>> sinks;     ///< Pluggable sinks (stream/file/etc)
+  static std::unique_ptr<LogFormatter> formatter;         ///< Custom log formatter
+  static std::unique_ptr<RotatingFileLogger> file_logger; ///< File logger with rotation (kept for compatibility)
 
 public:
   /**
