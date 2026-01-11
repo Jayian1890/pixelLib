@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-TEST_SUITE("Filesystem Module")
+TEST_SUITE("FileSystem Module")
 {
   using pixellib::core::filesystem::FileSystem;
 
