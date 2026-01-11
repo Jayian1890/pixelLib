@@ -1064,32 +1064,39 @@ public:
   /**
    * @brief Per-category configuration registry for named loggers
    */
-  class LoggerRegistry {
+  class LoggerRegistry
+  {
   public:
-    static void set_config(const std::string &name, LoggerConfig cfg) {
+    static void set_config(const std::string &name, LoggerConfig cfg)
+    {
       std::lock_guard<std::mutex> lock(registry_mutex());
       registry()[name] = std::move(cfg);
     }
 
-    static bool has_config(const std::string &name) {
+    static bool has_config(const std::string &name)
+    {
       std::lock_guard<std::mutex> lock(registry_mutex());
       return registry().find(name) != registry().end();
     }
 
-    static LoggerConfig *get_config(const std::string &name) {
+    static LoggerConfig *get_config(const std::string &name)
+    {
       std::lock_guard<std::mutex> lock(registry_mutex());
       auto it = registry().find(name);
-      if (it == registry().end()) return nullptr;
+      if (it == registry().end())
+        return nullptr;
       return &it->second;
     }
 
   private:
-    static std::unordered_map<std::string, LoggerConfig> &registry() {
+    static std::unordered_map<std::string, LoggerConfig> &registry()
+    {
       static std::unordered_map<std::string, LoggerConfig> instance;
       return instance;
     }
 
-    static std::mutex &registry_mutex() {
+    static std::mutex &registry_mutex()
+    {
       static std::mutex m;
       return m;
     }
@@ -1098,51 +1105,72 @@ public:
   /**
    * @brief Category logger for per-module logging
    */
-  class CategoryLogger {
+  class CategoryLogger
+  {
   private:
     std::string name_;
+
   public:
     explicit CategoryLogger(const std::string &name) : name_(name) {}
 
-    void log(LogLevel level, const std::string &message) {
+    void log(LogLevel level, const std::string &message)
+    {
       // Check per-category config first
       LoggerConfig *cfg = LoggerRegistry::get_config(name_);
       LogLevel effective_level = current_level;
-      if (cfg) effective_level = cfg->level;
-      if (level < effective_level) return;
+      if (cfg)
+        effective_level = cfg->level;
+      if (level < effective_level)
+        return;
 
       // Format message
       const auto now = std::chrono::system_clock::now();
       const std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-      std::tm local_tm; localtime_threadsafe(&now_time_t, &local_tm);
+      std::tm local_tm;
+      localtime_threadsafe(&now_time_t, &local_tm);
 
       std::string formatted_message;
-      if (cfg && cfg->formatter) {
+      if (cfg && cfg->formatter)
+      {
         formatted_message = cfg->formatter->format(level, message, local_tm);
-      } else if (formatter) {
+      }
+      else if (formatter)
+      {
         formatted_message = formatter->format(level, message, local_tm);
-      } else {
+      }
+      else
+      {
         std::ostringstream oss;
         oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") << "] [" << name_ << "] [" << log_level_to_string(level) << "] " << message;
         formatted_message = oss.str();
       }
 
       // Choose sinks
-      std::vector<LogSink*> write_sinks;
-      if (cfg && !cfg->sinks.empty()) {
-        for (auto &s : cfg->sinks) write_sinks.push_back(s.get());
-      } else if (!sinks.empty()) {
-        for (auto &s : sinks) write_sinks.push_back(s.get());
+      std::vector<LogSink *> write_sinks;
+      if (cfg && !cfg->sinks.empty())
+      {
+        for (auto &s : cfg->sinks)
+          write_sinks.push_back(s.get());
+      }
+      else if (!sinks.empty())
+      {
+        for (auto &s : sinks)
+          write_sinks.push_back(s.get());
       }
 
       // If no sinks, fallback to output stream
-      if (write_sinks.empty()) {
+      if (write_sinks.empty())
+      {
         std::lock_guard<std::mutex> lock(log_mutex);
-        try {
+        try
+        {
           std::ostream &out_stream = (level == LOG_ERROR || level == LOG_FATAL) ? *error_stream : *output_stream;
           out_stream << formatted_message << std::endl;
-          if (!out_stream.good()) out_stream.clear();
-        } catch (...) {
+          if (!out_stream.good())
+            out_stream.clear();
+        }
+        catch (...)
+        {
           std::cerr << "Unknown logging error occurred" << std::endl;
           std::cerr << formatted_message << std::endl;
         }
@@ -1150,13 +1178,19 @@ public:
       }
 
       // Write to sinks
-      for (auto *sink : write_sinks) {
-        try {
+      for (auto *sink : write_sinks)
+      {
+        try
+        {
           sink->write(formatted_message);
-        } catch (const std::exception &e) {
+        }
+        catch (const std::exception &e)
+        {
           std::cerr << "Logging error: " << e.what() << std::endl;
           std::cerr << formatted_message << std::endl;
-        } catch (...) {
+        }
+        catch (...)
+        {
           std::cerr << "Unknown logging error occurred" << std::endl;
           std::cerr << formatted_message << std::endl;
         }
@@ -1164,18 +1198,39 @@ public:
     }
 
     // Convenience methods
-    void debug(const std::string &message) { log(LOG_DEBUG, message); }
-    void info(const std::string &message) { log(LOG_INFO, message); }
-    void warning(const std::string &message) { log(LOG_WARNING, message); }
-    void error(const std::string &message) { log(LOG_ERROR, message); }
-    void trace(const std::string &message) { log(LOG_TRACE, message); }
-    void fatal(const std::string &message) { log(LOG_FATAL, message); }
+    void debug(const std::string &message)
+    {
+      log(LOG_DEBUG, message);
+    }
+    void info(const std::string &message)
+    {
+      log(LOG_INFO, message);
+    }
+    void warning(const std::string &message)
+    {
+      log(LOG_WARNING, message);
+    }
+    void error(const std::string &message)
+    {
+      log(LOG_ERROR, message);
+    }
+    void trace(const std::string &message)
+    {
+      log(LOG_TRACE, message);
+    }
+    void fatal(const std::string &message)
+    {
+      log(LOG_FATAL, message);
+    }
   };
 
   /**
    * @brief Obtain a category logger for a named module
    */
-  static CategoryLogger get(const std::string &name) { return CategoryLogger(name); }
+  static CategoryLogger get(const std::string &name)
+  {
+    return CategoryLogger(name);
+  }
 
   /**
    * @brief Log a message at the specified level
