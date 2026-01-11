@@ -186,6 +186,9 @@ Diagnostics:
       - "readability-uppercase-literal-suffix"
       - "readability-use-anyofallof"
       - "readability-avoid-const-params-in-decls"
+      # Exclude checks that cause false positives with doctest macros
+      - "cppcoreguidelines-avoid-do-while"
+      - "readability-function-cognitive-complexity"
       # Exclude libc++ specific checks
       - "llvm-namespace-comment"
       - "libc-*"

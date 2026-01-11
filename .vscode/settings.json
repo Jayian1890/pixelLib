@@ -7,7 +7,6 @@
         "--header-insertion=never",
         "--completion-style=detailed",
         "--clang-tidy",
-        "--clang-tidy-checks=*",
         "--all-scopes-completion",
         "--completion-parse=auto",
         "--log=verbose"
@@ -30,23 +29,23 @@
     "clang-format-2025.formatOnSaveMode": "file",
     "clang-format-2025.editorconfig": true,
     "clang-format-2025.defaultLanguage": "cpp",
-    // clang-tidy integration
-    "C_Cpp.clang_tidy.enable": true,
-    "C_Cpp.clang_tidy.checks": "*",
+    // clang-tidy integration (disabled in favor of clangd)
+    "C_Cpp.clang_tidy.enable": false,
+    "C_Cpp.clang_tidy.checks": "bugprone-*,performance-*,modernize-*,readability-*",
     "C_Cpp.clang_tidy.config": "${workspaceFolder}/.clang-tidy",
     "C_Cpp.clang_tidy.compileCommands": "${workspaceFolder}/build/compile_commands.json",
-    "C_Cpp.clang_tidy.runOnSave": true,
-    "C_Cpp.clang_tidy.runOnBuild": true,
-    "C_Cpp.clang_tidy.quiet": false,
+    "C_Cpp.clang_tidy.runOnSave": false,
+    "C_Cpp.clang_tidy.runOnBuild": false,
+    "C_Cpp.clang_tidy.quiet": true,
     "C_Cpp.clang_tidy.fixOnSave": false,
-    // clang-format-2025 + clang-tidy integration
-    "clang-format-2025.clangTidy.enable": true,
+    // clang-format-2025 + clang-tidy integration (disabled in favor of clangd)
+    "clang-format-2025.clangTidy.enable": false,
     "clang-format-2025.clangTidy.config": "${workspaceFolder}/.clang-tidy",
     "clang-format-2025.clangTidy.checks": "bugprone-*,performance-*,modernize-*",
-    "clang-format-2025.clangTidy.runOnSave": true,
-    "clang-format-2025.clangTidy.runOnFormat": true,
+    "clang-format-2025.clangTidy.runOnSave": false,
+    "clang-format-2025.clangTidy.runOnFormat": false,
     "clang-format-2025.clangTidy.fixOnSave": false,
-    "clang-format-2025.clangTidy.quiet": false,
+    "clang-format-2025.clangTidy.quiet": true,
     // Editor settings for optimal formatting experience
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
@@ -86,18 +85,14 @@
         "editor.insertSpaces": true,
         "editor.detectIndentation": false
     },
-    // IntelliC++ settings for better C++ support
-    "C_Cpp.intelliSenseEngine": "default",
-    "C_Cpp.intelliSenseEngineFallback": true,
+    // IntelliC++ settings for better C++ support (using clangd)
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.intelliSenseEngineFallback": false,
     "C_Cpp.autocomplete": "default",
-    "C_Cpp.enhancedColorization": "enabled",
-    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.enhancedColorization": "disabled",
+    "C_Cpp.errorSquiggles": "disabled",
     "C_Cpp.inlayHints": {
-        "enabled": true,
-        "parameterNames": true,
-        "parameterNamesHints": "literals",
-        "referenceOperator": "deref",
-        "deducedTypes": true
+        "enabled": false
     },
     // File associations
     "files.associations": {
