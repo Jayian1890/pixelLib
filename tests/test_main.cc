@@ -7,6 +7,26 @@
 #include <sstream>
 #include <string>
 
+// Cross-platform environment variable helpers
+// Note: Error handling intentionally omitted for test simplicity
+static void set_env_var(const char *name, const char *value)
+{
+#ifdef _WIN32
+  _putenv_s(name, value);
+#else
+  setenv(name, value, 1);
+#endif
+}
+
+static void unset_env_var(const char *name)
+{
+#ifdef _WIN32
+  _putenv_s(name, "");
+#else
+  unsetenv(name);
+#endif
+}
+
 TEST_SUITE("Sanity Checks")
 {
 
@@ -44,8 +64,11 @@ TEST_SUITE("Sanity Checks")
 
   TEST_CASE("network")
   {
+    // Set test mode for deterministic behavior
+    set_env_var("PIXELLIB_TEST_MODE", "1");
+
     std::string response = pixellib::core::network::Network::http_get("http://example/test");
-    CHECK(response.find("HTTP response from http://example/test") != std::string::npos);
+    CHECK(response.find("Mock HTTP response from http://example/test") != std::string::npos);
 
     std::string r2 = pixellib::core::network::Network::http_post("http://example/post", "payload");
     CHECK(r2.find("payload") != std::string::npos);
@@ -55,5 +78,11 @@ TEST_SUITE("Sanity Checks")
 
     std::string r4 = pixellib::core::network::Network::https_post("https://example/post", "p");
     CHECK(r4.find('p') != std::string::npos);
+
+    double r5 = pixellib::core::network::Network::measure_bandwidth("http://example/test");
+    CHECK(r5 > 0.0);
+
+    // Clean up
+    unset_env_var("PIXELLIB_TEST_MODE");
   }
 }

@@ -206,3 +206,6 @@ TEST_CASE("ModuleName::new_function - error handling") {
 - **Cross-platform**: Consider Windows/macOS/Linux differences in implementations
 - **Minimal changes**: Make surgical, targeted changes rather than broad refactoring
 - **Validate thoroughly**: Run tests, coverage, and clang-tidy before considering work complete
+- **Commit messages**: Keep commit messages short and concise - maximum 50 characters for the first line, no long explanations
+- **No mock code**: NEVER use mock code for any reason, always use real code
+- **Convert mock to real**: ALWAYS convert mock code to real code
