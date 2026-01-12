@@ -1,201 +1,195 @@
-# pixelLib — Copilot Instructions
+# AI Development Guide for C++ Projects
 
-This is a header-only C++23 utility library providing essential modules for filesystem operations, JSON parsing, logging, and network operations. The library emphasizes modern C++ practices, cross-platform compatibility, and comprehensive testing.
+## Project Overview
+This document provides AI assistants with the necessary context and guidelines for contributing to this C++ project. It covers project structure, coding standards, and development workflows.
 
-## Required Before Each Commit
-- Run `make run-tests` to ensure all tests pass
-- Ensure test coverage remains above 70% by running `make coverage`
-- Format code with clang-format (integrated with VS Code or run manually)
-
-## Development Flow
-- **Build**: `make test` or simply `make` (builds test binary with coverage enabled)
-- **Debug builds**: `make CXXFLAGS="-O0 -g"` for debugging symbols
-- **Test**: `make run-tests` (executes all test suites, ~73 tests)
-- **Coverage**: `make coverage` → generates HTML report in `build/coverage/html/index.html`
-- **Full CI check**: `make clean && make test && make run-tests && make coverage`
-
-## Repository Structure
+## Project Structure
 ```
-pixelLib/
-├── include/           # Public headers (header-only library)
-│   ├── filesystem.hpp # Cross-platform file/directory operations
-│   ├── json.hpp       # DOM parser with Unicode support
-│   ├── logging.hpp    # Multi-level logging with rotation
-│   └── network.hpp    # HTTP/HTTPS, hostname resolution, downloads
-├── tests/            # Unit tests (one per module + main)
-│   ├── test_filesystem.cc
-│   ├── test_json.cc
-│   ├── test_logging.cc
-│   ├── test_network.cc
-│   ├── test_main.cc
-│   └── doctest_main.cpp
-├── tools/            # Utility scripts
-│   └── get_doctest.sh        # Fetches doctest header
-└── build/           # Build artifacts (gitignored)
-    ├── tests/       # Compiled test binary
-    └── coverage/    # Coverage reports (HTML & LCOV)
+project/
+├── include/              # Public headers (single include style)
+│   └── project/          # Project namespace
+│       └── core/         # Core functionality modules
+├── src/                  # Implementation files
+│   └── core/             # Core implementation files
+├── tests/               # Unit tests
+│   ├── test_*.cc        # Test files (one per module)
+│   └── test_main.cc     # Test runner
+├── third-party/         # Dependencies (git submodules or headers)
+└── .github/             # CI/CD and project documentation
 ```
 
-## Architecture & Design
-- **Header-only design**: All implementations in headers (`include/`), no linking required
-- **C++23 target**: Modern C++ features enforced by Makefile (`STD ?= c++23`)
-- **Namespace structure**: `pixellib::core::<module>::<class>` (e.g., `pixellib::core::json::JSON`)
-- **Testing**: Single test binary using a doctest framework, 95%+ code coverage target
-- **Cross-platform**: Windows (MinGW/MSVC), macOS, Linux with platform-specific handling
+## Development Guidelines
 
-## Code Standards & Conventions
-
-### File Organization
-- **Headers**: `.hpp` extension only, placed in `include/` directory (no subdirectories)
-- **Tests**: `.cc` extension, placed in `tests/` directory, one test file per module
-- **Naming**: Follow existing patterns - `test_<module>.cc` for tests, lowercase with underscores
-
-### C++ Style & Best Practices
-- **Modern C++23**: Use std::filesystem, std::ranges, concepts, and other C++23 features
-- **clang-format**: Automatic formatting configured in `.clang-format` file
-- **Namespace structure**: Always use `pixellib::core::<module>::<class>` pattern
-- **Header-only constraint**: All implementations must be in headers (no `.cpp` files)
-- **Minimal dependencies**: Only doctest for testing; avoid adding new dependencies
-- **Cross-platform code**: Use preprocessor directives for platform-specific code when needed
+### Code Style
+- **C++ Standard**: C++23
+- **Formatting**: clang-format (config in `.clang-format`)
+- **Naming**: `snake_case` for variables/functions, `PascalCase` for types
+- **Headers**: Header-only libraries preferred
+- **Documentation**: All code must be documented using Doxygen-style comments. This includes:
+  - File headers with `@file`, `@brief`, `@author`, and `@date`
+  - Namespace documentation with `@brief`
+  - Class/struct documentation with `@brief`, `@details`, `@tparam` for templates
+  - Function documentation with `@brief`, `@param`, `@return`, and `@throw`
+  - Variable documentation with `@brief`
+  - Group related functionality with `@defgroup` and `@{\n...\n@}`
 
 ### Testing Requirements
-- **Coverage target**: Maintain 95%+ code coverage for all new code
-- **Test isolation**: Use `PIXELLIB_TEST_MODE=1` environment variable for deterministic tests
-- **Single file per module**: Keep all tests for a module in one `tests/test_<module>.cc` file
-- **Doctest macros**: Use `TEST_CASE`, `CHECK`, `REQUIRE`, `SUBCASE` from doctest framework
-- **No external dependencies**: Tests must be self-contained and offline-safe
+- **Framework**: doctest (header-only)
+- **Coverage**: 75%+ test coverage target
+- **Test Organization**:
+  - One test file per module
+  - Group related tests in `TEST_SUITE`
+  - Use `TEST_CASE` for test groups
+  - Prefer `CHECK` over `REQUIRE` for multiple assertions
+- **No Mocking**: Mock code is strictly forbidden. Write tests against real implementations only.
 
-## Build System & Testing Details
-- **Makefile-driven**: Single Makefile handles all build, test, and coverage tasks
-- **Compiler detection**: Auto-detects clang/gcc/Windows and adjusts flags accordingly
-- **Coverage support**: 
-  - LLVM/clang coverage on macOS (llvm-profdata, llvm-cov)
-  - GCC/gcovr on Linux
-  - HTML reports in `build/coverage/html/` with LCOV files
-- **Test mode**: Set `PIXELLIB_TEST_MODE=1` for deterministic offline-safe tests
-- **Compilation database**: `make compile-commands` generates `build/compile_commands.json` for clangd
+### Build System
+- **Build Tool**: Make (GNU Make required)
+- **Build Modes**:
+  - Debug: `make DEBUG=1` (defaults to `-O0 -g`)
+  - Release: `make` (defaults to `-O3 -DNDEBUG`)
+- **Dependencies**: Document all third-party deps in `third-party/`
+- **Output**: Build artifacts go to `build/` directory
 
-## Code Quality & Tooling
-- **clang-format**: Code formatting via `.clang-format` file (auto-applied in VS Code)
-- **VS Code integration**: Optimized settings in `.vscode/` for clangd
-- **CI/CD**: GitHub Actions in `.github/workflows/build-test.yml` runs all checks on push/PR
+### Commit Guidelines
+- **Format**: Conventional Commits (feat:, fix:, docs:, etc.)
+- **Scope**: Keep commits focused and atomic
+- **Messages**: Clear, concise, and reference issues when applicable
 
-## Development Workflow Examples
+## AI Assistant Guidelines
 
-### Adding a New Feature
-1. Identify the module to modify (filesystem, JSON, logging, or network)
-2. Edit the header file in `include/<module>.hpp`
-3. Add comprehensive tests in `tests/test_<module>.cc`
-4. Run `make run-tests` to verify tests pass
-5. Run `make coverage` to ensure >80% coverage
-6. Commit changes with a short concise message
+### Before Making Changes
+1. Check `git status` for uncommitted changes
+2. Pull latest changes from main branch
+3. Run tests to ensure a clean baseline
 
-### Fixing a Bug
-1. Add a failing test case that reproduces the bug in `tests/test_<module>.cc`
-2. Run `make run-tests` to confirm the test fails
-3. Fix the bug in `include/<module>.hpp`
-4. Run `make run-tests` to confirm the test passes
-5. Commit with reference to the bug
+### Development Workflow
+1. **For New Features**:
+   - Add tests first (TDD approach)
+   - Implement the feature
+   - Ensure all tests pass
+   - Update documentation
 
-### Debugging Build Issues
-- Use debug builds: `make CXXFLAGS="-O0 -g"` for debug symbols
-- Check compiler errors carefully - header-only means all errors at compile time
-- For coverage issues on macOS, ensure xcrun tools are available
-- For Windows, ensure MinGW or MSVC is properly configured
+2. **For Bug Fixes**:
+   - Add a failing test that reproduces the bug
+   - Fix the bug
+   - Verify the test passes
+   - Add regression tests
 
-## Module-Specific Guidelines
+3. **For Refactoring**:
+   - Ensure comprehensive test coverage
+   - Make changes incrementally
+   - Verify all tests pass after each change
 
-### Filesystem Module (`filesystem.hpp`)
-- Cross-platform operations with Windows/Unix path handling
-- Uses `std::filesystem` internally with fallback mechanisms
-- Test with both absolute and relative paths
-- Handle edge cases: permissions, non-existent paths, special characters
+### Code Review Guidelines
+- Check for consistent style and formatting
+- Verify test coverage remains high
+- Ensure proper error handling
+- Check for potential security issues
+- Verify cross-platform compatibility
 
-### JSON Module (`json.hpp`)
-- DOM parser with strict validation and Unicode support (including surrogate pairs)
-- Preserves original numeric representation for round-trip accuracy
-- Configurable serialization: compact vs. pretty-print, solidus escaping
-- Test with malformed JSON, edge cases (empty objects/arrays), and Unicode
+### Documentation Requirements
+- **Doxygen Comments Required For**:
+  - All header files
+  - Public and protected class members
+  - Function declarations and definitions
+  - Global and class-scope variables
+  - Namespaces and their contents
+- **Format**:
+  ```cpp
+  /**
+   * @brief Brief description (one line)
+   * 
+   * Detailed description (multiple lines if needed)
+   * @param param1 Description of first parameter
+   * @param param2 Description of second parameter
+   * @return Description of return value
+   * @throw ExceptionType Description of when this exception is thrown
+   * @note Any important notes about the function
+   * @warning Any warnings about using the function
+   * @see Related functions or classes
+   */
+  ```
+- **Examples**: Include `@code` blocks for complex functionality
+- **Maintainability**: Update documentation when code changes
+- **Verification**: Run Doxygen to verify documentation builds without warnings
 
-### Logging Module (`logging.hpp`)
-- Multi-level logging: TRACE, DEBUG, INFO, WARNING, ERROR, FATAL
-- File rotation: size-based and time-based (pre-emptive rotation before exceeding limits)
-- Thread-safe operations, structured logging with key/value pairs
-- Compile-time filtering via `PIXELLIB_COMPILED_LOG_LEVEL` macro
-- Test with concurrent logging, rotation triggers, and custom formatters
+## Common Tasks
 
-### Network Module (`network.hpp`)
-- HTTP/HTTPS operations, hostname resolution, downloads with progress
-- Use `PIXELLIB_TEST_MODE=1` for deterministic offline testing
-- Handle timeouts, redirects, and connection failures gracefully
-- Test with both IPv4 and IPv6 addresses
+### Running Tests
+```bash
+# Run all tests
+make test
 
-## Testing Guidelines
-- **High coverage target**: Aim for 95%+ code coverage on all new code
-- **Deterministic tests**: Use `PIXELLIB_TEST_MODE=1` for offline-safe network operations
-- **Test organization**: All tests for a module in one `tests/test_<module>.cc` file
-- **Doctest usage**: Use `TEST_CASE`, `CHECK`, `REQUIRE`, `SUBCASE` macros appropriately
-- **Test isolation**: Each test should be independent with no external service dependencies
-- **Edge cases**: Test boundary conditions, error paths, and platform-specific behavior
+# Run specific test
+./build/tests/test_module
 
-## Common Tasks & Examples
-
-### Adding a New Function to a Module
-```cpp
-// In include/<module>.hpp
-namespace pixellib::core::<module> {
-  class ModuleName {
-  public:
-    // Add new function with clear documentation
-    static Result new_function(const std::string& param) {
-      // Implementation here
-    }
-  };
-}
-
-// In tests/test_<module>.cc
-TEST_CASE("ModuleName::new_function - basic usage") {
-  auto result = ModuleName::new_function("test");
-  CHECK(result.success);
-  CHECK(result.value == "expected");
-}
-
-TEST_CASE("ModuleName::new_function - error handling") {
-  auto result = ModuleName::new_function("");
-  CHECK(!result.success);
-}
+# Generate coverage report
+make coverage
 ```
 
-### Updating Documentation
-- Update README.md for user-facing changes
-- Update inline code comments for complex logic
-- Keep this copilot-instructions.md updated for development workflow changes
-- Update docstring-style comments for public APIs
+### Building the Project
+```bash
+# Debug build
+mkdir -p build/debug && cd build/debug
+cmake -DCMAKE_BUILD_TYPE=Debug ../..
+make -j$(nproc)
 
-## Key Constraints & Requirements
-- **Header-only**: No compiled library artifacts, all code in headers
-- **C++23 compliance**: Use modern C++ features
-- **Minimal dependencies**: Only add dependencies if absolutely necessary
-- **Consistent style**: Follow existing naming conventions and clang-format rules
-- **Test coverage**: Add comprehensive tests for any new functionality
-- **Performance**: Consider performance implications
-- **Cross-platform**: Ensure Windows/macOS/Linux compatibility with platform-specific code when needed
+# Release build
+mkdir -p build/release && cd build/release
+cmake -DCMAKE_BUILD_TYPE=Release ../..
+make -j$(nproc)
+```
 
-## Integration & Tooling
-- **VS Code**: Optimized configuration with clangd and clang-format
-- **clangd**: Language server for code navigation, auto-completion, and diagnostics
-- **Coverage visualization**: Use "Coverage Gutters" extension with `build/coverage/lcov.relative.info`
-- **CI/CD**: GitHub Actions automatically runs build, test, and coverage on PR
+### Code Formatting
+```bash
+# Format all source files
+find include tests -name '*.hpp' -o -name '*.cpp' | xargs clang-format -i
+```
 
-## Guidelines for AI Agents
-- **Root cause analysis**: Use modern C++ best practices to identify fundamental issues
-- **Modern C++ first**: Leverage C++23 features
-- **Header-only constraint**: All implementations must be in headers, never create `.cpp` files
-- **Test-driven**: Always add/modify tests when implementing changes
-- **Performance aware**: Watch for performance implications
-- **Cross-platform**: Consider Windows/macOS/Linux differences in implementations
-- **Minimal changes**: Make surgical, targeted changes rather than broad refactoring
-- **Validate thoroughly**: Run tests and coverage before considering work complete
-- **Commit messages**: Keep commit messages short and concise - maximum 50 characters for the first line, no long explanations
-- **No mock code**: NEVER use mock code for any reason, always use real code
-- **Convert mock to real**: ALWAYS convert mock code to real code
+## Troubleshooting
+
+### Common Issues
+- **Missing Dependencies**: Check `third-party/` and README.md
+- **Build Failures**: Clean build directory and rebuild
+- **Test Failures**: Run with `--verbose` for detailed output
+- **Memory Issues**: Use AddressSanitizer/Valgrind
+
+### Performance Optimization
+- Profile before optimizing
+- Focus on algorithmic complexity first
+- Use appropriate data structures
+- Consider cache locality
+
+## Security Guidelines
+- Validate all inputs
+- Use secure defaults
+- Handle errors gracefully
+- Follow principle of least privilege
+- Keep dependencies updated
+
+## License
+MIT License
+
+Copyright (c) 2026 Interlaced Pixel
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+*This document is maintained by the project maintainers. Please update it when making significant changes to the project structure or development workflow.*
