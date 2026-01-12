@@ -81,12 +81,15 @@ project/
    - Make changes incrementally
    - Verify all tests pass after each change
 
-### Code Review Guidelines
-- Check for consistent style and formatting
-- Verify test coverage remains high
-- Ensure proper error handling
-- Check for potential security issues
-- Verify cross-platform compatibility
+### Important Rules
+- **ALWAYS** read `.github/*instructions` before making changes
+- **ALWAYS** fix lint warnings before submitting a code change
+- **ALWAYS** fix doctest errors before submitting a code change
+- **ALWAYS** fix warnings before submitting a code change
+- **ALWAYS** fix errors before submitting a code change
+- **ALWAYS** push changes to GitHub after completing a task
+- **NEVER** use mock code for any reason, always use real code
+- **ALWAYS** convert mock code to real code
 
 ### Documentation Requirements
 - **Doxygen Comments Required For**:
