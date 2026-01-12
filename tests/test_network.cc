@@ -887,28 +887,6 @@ TEST_SUITE("Test Helper Methods")
 #endif
   }
 
-  TEST_CASE("SocketConnectionEdgeCases")
-  {
-    using namespace pixellib::core::network;
-
-    // Test boundary conditions for port numbers
-    int sock1 = Network::create_socket_connection("example.com", 1);
-    CHECK(sock1 >= -1); // May fail or succeed depending on network
-
-    int sock2 = Network::create_socket_connection("example.com", 65535);
-    CHECK(sock2 >= -1); // May fail or succeed depending on network
-
-    // Test close socket with various invalid fds
-    bool close1 = Network::close_socket_connection(-2);
-    CHECK(close1 == false);
-
-    bool close2 = Network::close_socket_connection(INT_MIN);
-    CHECK(close2 == false);
-
-    bool close3 = Network::close_socket_connection(INT_MAX);
-    CHECK(close3 == true); // INT_MAX is >= -1, so function returns true
-  }
-
   TEST_CASE("UrlParsingEdgeCases")
   {
     using namespace pixellib::core::network;

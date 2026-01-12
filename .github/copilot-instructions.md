@@ -82,7 +82,6 @@ project/
    - Verify all tests pass after each change
 
 ### Important Rules
-- **ALWAYS** read `.github/*instructions` before making changes
 - **ALWAYS** fix lint warnings before submitting a code change
 - **ALWAYS** fix doctest errors before submitting a code change
 - **ALWAYS** fix warnings before submitting a code change
