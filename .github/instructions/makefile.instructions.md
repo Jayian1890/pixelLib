@@ -4,7 +4,7 @@ applyTo: "**/Makefile"
 
 ## Makefile Modification Guidelines
 
-The Makefile is the central build system for pixelLib. When modifying it, follow these guidelines:
+The Makefile is the central build system for your project. When modifying it, follow these guidelines:
 
 ### Build System Principles
 1. **Maintain simplicity** – Keep the Makefile straightforward and easy to understand
@@ -13,8 +13,9 @@ The Makefile is the central build system for pixelLib. When modifying it, follow
 4. **Default to modern C++** - Keep `STD ?= c++23` as the standard
 
 ### Key Targets (Do Not Break)
-- `all` - Main target: clean, build tests, run coverage
-- `test` - Build the test binary with coverage flags
+- `all` - Main target: clean, build (if exists), build_test (if exists), compile-commands, coverage
+- `build` - Build the main binary
+- `build_test` - Build the test binary with coverage flags
 - `run-tests` - Execute the test binary
 - `coverage` - Generate coverage reports (HTML and LCOV)
 - `clean` - Remove build artifacts

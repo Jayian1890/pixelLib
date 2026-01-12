@@ -4,7 +4,7 @@ applyTo: "**/include/*.hpp"
 
 ## Header File Requirements
 
-When modifying or creating header files in pixelLib, follow these strict guidelines:
+When modifying or creating header files in your C++ library, follow these strict guidelines:
 
 ### Header-Only Library Constraints
 1. **All code in headers** – This is a header-only library; never create `.cpp` implementation files
@@ -13,7 +13,7 @@ When modifying or creating header files in pixelLib, follow these strict guideli
 4. **Self-contained** - Each header should be independently includable without requiring a specific include order
 
 ### Code Organization
-1. **Namespace structure** - Always use `namespace pixellib::core::<module>` pattern
+1. **Namespace structure** - Always use `namespace your_namespace::core::<module>` pattern
 2. **Module isolation** – Keep each module's code in its respective header file
 3. **Minimal includes** – Only include headers that are strictly necessary
 4. **Forward declarations** – Use forward declarations when possible to reduce dependencies
@@ -67,7 +67,7 @@ public:
 
 ### Validation Checklist
 - [ ] Header uses `#pragma once`
-- [ ] Code is in `namespace pixellib::core::<module>`
+- [ ] Code is in `namespace your_namespace::core::<module>`
 - [ ] All functions have implementations (no forward declarations without definitions)
 - [ ] Platform-specific code is properly guarded with `#ifdef`
 - [ ] Public APIs have documentation comments

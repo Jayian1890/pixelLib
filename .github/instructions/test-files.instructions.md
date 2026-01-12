@@ -4,7 +4,7 @@ applyTo: "**/tests/test_*.cc"
 
 ## Unit Test Requirements
 
-When writing or modifying unit tests for pixelLib, follow these guidelines:
+When writing or modifying unit tests for your C++ library, follow these guidelines:
 
 ### Test Organization
 1. **One test file per module** - Keep all tests for a module in a single `tests/test_<module>.cc` file
@@ -15,7 +15,7 @@ When writing or modifying unit tests for pixelLib, follow these guidelines:
 1. **Use doctest macros** - Prefer `CHECK` over `REQUIRE` unless test cannot continue on failure
 2. **Test independence** - Each test should be self-contained and not rely on other tests' state
 3. **Coverage focus** - Aim for 95%+ code coverage, including error paths and edge cases
-4. **Deterministic tests** - Use `PIXELLIB_TEST_MODE=1` for network tests to avoid external dependencies
+4. **Avoid external dependencies** - Tests should not rely on network, filesystem, or other external resources
 
 ### Test Structure
 ```cpp
@@ -49,7 +49,7 @@ TEST_CASE("ModuleName::function - descriptive name") {
 ### Test Verification
 - Run `make run-tests` to execute all tests (should complete in seconds)
 - Run `make coverage` to verify coverage remains above 95%
-- Check that tests pass with `PIXELLIB_TEST_MODE=1` for deterministic network behavior
+- Ensure tests avoid external dependencies
 - Ensure tests are platform-agnostic or properly guarded with preprocessor directives
 
 ### Avoid

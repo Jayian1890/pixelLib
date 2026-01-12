@@ -168,6 +168,14 @@ find include tests -name '*.hpp' -o -name '*.cpp' | xargs clang-format -i
 - Follow principle of least privilege
 - Keep dependencies updated
 
+## Additional Instructions
+
+For detailed guidelines on specific components:
+
+- [Header Files](./instructions/header-files.instructions.md)
+- [Makefile](./instructions/makefile.instructions.md)
+- [Test Files](./instructions/test-files.instructions.md)
+
 ## License
 MIT License
 
