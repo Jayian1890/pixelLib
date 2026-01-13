@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "CLI Debug",
+      "name": "Build and Test",
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/build/bin/bitscrape_cli",

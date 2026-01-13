@@ -24,7 +24,7 @@
             "type": "shell",
             "command": "make",
             "args": [
-                "test"
+                "build_test"
             ],
             "group": {
                 "kind": "build",
@@ -59,7 +59,7 @@
             "type": "shell",
             "command": "make",
             "args": [
-                "run-tests"
+                "run_test"
             ],
             "group": "test",
             "presentation": {
