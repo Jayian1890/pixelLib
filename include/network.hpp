@@ -676,7 +676,7 @@ public:
     while ((received = recv(sockfd, buffer.data(), buffer.size() - 1, 0)) > 0)
     {
       buffer[static_cast<size_t>(received)] = '\0';
-      response += buffer.data();
+      response.append(buffer.data(), static_cast<size_t>(received));
     }
 
     close_socket_connection(sockfd);
@@ -780,7 +780,7 @@ public:
     while ((received = recv(sockfd, buffer.data(), buffer.size() - 1, 0)) > 0)
     {
       buffer[static_cast<size_t>(received)] = '\0';
-      response += buffer.data();
+      response.append(buffer.data(), static_cast<size_t>(received));
     }
 
     close_socket_connection(sockfd);
