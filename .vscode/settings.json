@@ -109,5 +109,6 @@
     // Auto-restart clangd on .clangd save
     "files.watcherExclude": {
         "**/build/**": true
-    }
+    },
+    "qodana.projectId": "B5dyq"
 }
