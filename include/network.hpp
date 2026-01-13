@@ -321,8 +321,7 @@ public:
     {
       if (test_is_host_hook)
       {
-        int forced = test_is_host_hook("connect");
-        if (forced != 0)
+        if (int forced = test_is_host_hook("connect"); forced != 0)
         {
           return {false, forced, "Forced connect failure"};
         }
@@ -382,8 +381,8 @@ public:
     std::string host, path;
     int port = 80;
 
-    size_t protocol_end = url.find("://");
-    if (protocol_end != std::string::npos)
+    if (size_t protocol_end = url.find("://");
+        protocol_end != std::string::npos)
     {
       std::string protocol;
       protocol = url.substr(0, protocol_end);
@@ -713,8 +712,8 @@ public:
     int port = 80;
 
     // Parse URL (same as http_get)
-    size_t protocol_end = url.find("://");
-    if (protocol_end != std::string::npos)
+    if (size_t protocol_end = url.find("://");
+        protocol_end != std::string::npos)
     {
       std::string protocol;
       protocol = url.substr(0, protocol_end);
@@ -905,7 +904,7 @@ public:
     return !ip_address.empty();
   }
 
-  static int create_socket_connection(const std::string &host, int port)
+  static int create_socket_connection(const std::string &host, const int port)
   {
     if (host.empty() || port <= 0 || port > 65535)
     {
@@ -994,12 +993,12 @@ public:
     }
   }
 
-  static bool is_http_success(int response_code)
+  static bool is_http_success(const int response_code)
   {
     return response_code >= 200 && response_code < 300;
   }
 
-  static double measure_latency(const std::string &host, int count = 4)
+  static double measure_latency(const std::string &host, const int count = 4)
   {
     if (host.empty() || count <= 0)
     {
@@ -1021,7 +1020,7 @@ public:
       auto start_time = std::chrono::high_resolution_clock::now();
 
       // Use socket connection to measure actual latency
-      if (int sockfd = create_socket_connection(host, 80); sockfd >= 0)
+      if (const int sockfd = create_socket_connection(host, 80); sockfd >= 0)
       {
         close_socket_connection(sockfd);
         auto end_time = std::chrono::high_resolution_clock::now();
