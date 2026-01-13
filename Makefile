@@ -60,6 +60,12 @@ coverage: run_test
 clean:
 	rm -rf build/
 
-compile-commands: build_test
+compile-commands:
 	mkdir -p build
-	echo '[{"directory":"'$(shell pwd)'","command":"$(CXX) -std=$(STD) $(WARN) $(DBG) $(COV_CFLAGS) $(INCLUDES) -o build/unit_tests tests/doctest_main.cpp tests/test_filesystem.cc tests/test_json.cc tests/test_logging.cc tests/test_network.cc $(LIBS)","file":"tests/doctest_main.cpp"}]' > build/compile_commands.json
+	@echo '[' > build/compile_commands.json
+	@echo '  {"directory":"'$(shell pwd)'","command":"$(CXX) -std=$(STD) $(WARN) $(DBG) $(INCLUDES) -c tests/doctest_main.cpp","file":"tests/doctest_main.cpp"},' >> build/compile_commands.json
+	@echo '  {"directory":"'$(shell pwd)'","command":"$(CXX) -std=$(STD) $(WARN) $(DBG) $(INCLUDES) -c tests/test_filesystem.cc","file":"tests/test_filesystem.cc"},' >> build/compile_commands.json
+	@echo '  {"directory":"'$(shell pwd)'","command":"$(CXX) -std=$(STD) $(WARN) $(DBG) $(INCLUDES) -c tests/test_json.cc","file":"tests/test_json.cc"},' >> build/compile_commands.json
+	@echo '  {"directory":"'$(shell pwd)'","command":"$(CXX) -std=$(STD) $(WARN) $(DBG) $(INCLUDES) -c tests/test_logging.cc","file":"tests/test_logging.cc"},' >> build/compile_commands.json
+	@echo '  {"directory":"'$(shell pwd)'","command":"$(CXX) -std=$(STD) $(WARN) $(DBG) $(INCLUDES) -c tests/test_network.cc","file":"tests/test_network.cc"}' >> build/compile_commands.json
+	@echo ']' >> build/compile_commands.json
