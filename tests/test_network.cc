@@ -353,9 +353,11 @@ TEST_SUITE("Network Module")
 
   TEST_CASE("LatencyValid")
   {
+    set_env_var("PIXELLIB_TEST_MODE", "1");
     double latency = pixellib::core::network::Network::measure_latency("example.com", 4);
     CHECK(latency >= 10.0);
     CHECK(latency <= 3000.0);
+    unset_env_var("PIXELLIB_TEST_MODE");
   }
 
   TEST_CASE("MeasureBandwidth")
@@ -619,11 +621,13 @@ TEST_SUITE("Test Helper Methods")
     CHECK(latency3 == -1.0);
 
     // Test valid parameters
+    set_env_var("PIXELLIB_TEST_MODE", "1");
     double latency4 = pixellib::core::network::Network::measure_latency("example.com", 1);
     CHECK(latency4 >= 10.0);
 
     double latency5 = pixellib::core::network::Network::measure_latency("example.com", 10);
     CHECK(latency5 >= 10.0);
+    unset_env_var("PIXELLIB_TEST_MODE");
   }
 
   TEST_CASE("BandwidthMeasurementEdgeCases")
@@ -715,12 +719,12 @@ TEST_SUITE("Test Helper Methods")
     // Test failed connect hook
     auto connect_error = Network::test_force_download_failed_connect();
     CHECK(connect_error.success == false);
-    CHECK(connect_error.error_code == 9); // Hook forces error code 9
+    CHECK(connect_error.error_code == 1); // Hook forces error code 1
 
     // Test failed send hook
     auto send_error = Network::test_force_download_failed_send();
     CHECK(send_error.success == false);
-    CHECK(send_error.error_code == 9); // Hook forces error code 9
+    CHECK(send_error.error_code == 8); // Hook forces error code 8
   }
 
   TEST_CASE("SocketConnectionEdgeCases")

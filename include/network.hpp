@@ -69,6 +69,7 @@ struct NetworkResult
 class Network
 {
 private:
+  static constexpr size_t download_buffer_size = 1024 * 1024;
   static bool initialize_winsock()
   {
 #ifdef _WIN32
@@ -522,7 +523,7 @@ public:
       return {false, 7, "Failed to create output file"};
     }
 
-    std::array<char, 4096> buffer{};
+    std::vector<char> buffer(download_buffer_size);
     bool headers_parsed = false;
     std::string headers;
 
@@ -670,7 +671,8 @@ public:
 
     // Receive response
     std::string response;
-    std::array<char, 4096> buffer{};
+    constexpr size_t download_buffer_size = 1024 * 1024;
+    std::vector<char> buffer(download_buffer_size);
     ssize_t received = 0;
 
     while ((received = recv(sockfd, buffer.data(), buffer.size() - 1, 0)) > 0)
@@ -774,7 +776,8 @@ public:
 
     // Receive response
     std::string response;
-    std::array<char, 4096> buffer{};
+    constexpr size_t download_buffer_size = 1024 * 1024;
+    std::vector<char> buffer(download_buffer_size);
     ssize_t received = 0;
 
     while ((received = recv(sockfd, buffer.data(), buffer.size() - 1, 0)) > 0)
