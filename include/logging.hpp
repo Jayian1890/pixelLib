@@ -427,10 +427,12 @@ private:
   std::thread worker_;
   std::atomic<bool> running_;
   std::atomic<size_t> dropped_count_;
+  bool processing_{false};
 
   void worker_loop()
   {
     std::unique_lock<std::mutex> lock(mutex_);
+    std::deque<std::string> local_queue;
     for (;;)
     {
       cv_.wait(lock, [&] { return !running_ || !queue_.empty(); });
@@ -438,11 +440,21 @@ private:
       {
         break;
       }
-      while (!queue_.empty())
+
+      // Swap to local queue to process without holding the lock for the entire duration
+      local_queue.swap(queue_);
+      processing_ = true;
+
+      // Notify producers that space is available (since we emptied the queue)
+      cv_.notify_all();
+
+      lock.unlock();
+
+      while (!local_queue.empty())
       {
-        std::string msg = std::move(queue_.front());
-        queue_.pop_front();
-        lock.unlock();
+        std::string msg = std::move(local_queue.front());
+        local_queue.pop_front();
+
         try
         {
           if (inner_)
@@ -453,16 +465,18 @@ private:
           // swallow exceptions from inner sink to avoid terminating the worker
           std::cerr << "AsyncLogSink inner sink write failed" << std::endl;
         }
-        lock.lock();
-        if (queue_.empty())
-          cv_.notify_all();
       }
+
+      lock.lock();
+      processing_ = false;
+      // Notify flushers that we have finished processing this batch
+      cv_.notify_all();
     }
   }
 
 public:
   AsyncLogSink(std::unique_ptr<LogSink> inner, size_t max_queue_size = 1024, DropPolicy policy = DropPolicy::DROP_NEWEST, std::chrono::milliseconds block_timeout = std::chrono::milliseconds(100))
-      : inner_(std::move(inner)), max_queue_size_(max_queue_size), policy_(policy), block_timeout_(block_timeout), running_(true), dropped_count_(0)
+      : inner_(std::move(inner)), max_queue_size_(max_queue_size), policy_(policy), block_timeout_(block_timeout), running_(true), dropped_count_(0), processing_(false)
   {
     worker_ = std::thread(&AsyncLogSink::worker_loop, this);
   }
@@ -536,7 +550,7 @@ public:
   void flush()
   {
     std::unique_lock<std::mutex> lock(mutex_);
-    cv_.wait(lock, [&] { return queue_.empty(); });
+    cv_.wait(lock, [&] { return queue_.empty() && !processing_; });
   }
 
   // Shutdown the async sink, draining remaining messages
