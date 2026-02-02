@@ -184,9 +184,9 @@ Use preprocessor guards for platform-specific implementations:
 
 For detailed guidelines on specific components:
 
-- [Header Files](./instructions/header-files.instructions.md)
-- [Makefile](./instructions/makefile.instructions.md)
-- [Test Files](./instructions/test-files.instructions.md)
+- [Header Files](instructions/header-files.instructions.md)
+- [Makefile](instructions/makefile.instructions.md)
+- [Test Files](instructions/test-files.instructions.md)
 
 ## License
 MIT License
