@@ -110,5 +110,12 @@
     "files.watcherExclude": {
         "**/build/**": true
     },
-    "qodana.projectId": "B5dyq"
+    "qodana.projectId": "B5dyq",
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/jayian/pixelLib/build",
+            "binaryPath": "/home/jayian/pixelLib/build/unit_tests",
+            "binaryArgs": []
+        }
+    ]
 }
