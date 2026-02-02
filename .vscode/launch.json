@@ -5,7 +5,7 @@
       "name": "Build and Test",
       "type": "lldb",
       "request": "launch",
-      "program": "${workspaceFolder}/build/bin/bitscrape_cli",
+      "program": "${workspaceFolder}/build/unit_tests",
       "args": [],
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "Full Build and Test",
