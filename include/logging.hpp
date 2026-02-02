@@ -725,7 +725,9 @@ public:
 private:
   std::string escape_json(const std::string &s)
   {
+    // Reserve up to 2x input size to avoid frequent reallocations on heavy escaping
     std::string escaped;
+    escaped.reserve(s.size() * 2 + 4);
     for (char c : s)
     {
       switch (c)

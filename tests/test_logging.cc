@@ -733,4 +733,96 @@ TEST_SUITE("Logging Module")
     std::filesystem::remove(fname, ec);
     std::filesystem::remove("build/tmp/testbuilder_async.log", ec);
   }
+
+  TEST_CASE("JsonEscapePerformance")
+  {
+    JSONLogFormatter jf;
+    std::tm tm{};
+
+    // Build a large message with many escapable characters
+    std::string big;
+    big.reserve(1024 * 50);
+    for (int i = 0; i < 1000; ++i)
+      big += "part \"\\\n\t";
+
+    // Micro-benchmark: compare naive escape (no reserve) to reserved implementation (same as in library)
+    auto old_escape = [&](const std::string &s) {
+      std::string escaped;
+      for (char c : s)
+      {
+        switch (c)
+        {
+        case '"':
+          escaped += "\\\"";
+          break;
+        case '\\':
+          escaped += "\\\\";
+          break;
+        case '\n':
+          escaped += "\\n";
+          break;
+        case '\r':
+          escaped += "\\r";
+          break;
+        case '\t':
+          escaped += "\\t";
+          break;
+        default:
+          escaped += c;
+          break;
+        }
+      }
+      return escaped;
+    };
+
+    auto new_escape = [&](const std::string &s) {
+      std::string escaped;
+      escaped.reserve(s.size() * 2 + 4);
+      for (char c : s)
+      {
+        switch (c)
+        {
+        case '"':
+          escaped += "\\\"";
+          break;
+        case '\\':
+          escaped += "\\\\";
+          break;
+        case '\n':
+          escaped += "\\n";
+          break;
+        case '\r':
+          escaped += "\\r";
+          break;
+        case '\t':
+          escaped += "\\t";
+          break;
+        default:
+          escaped += c;
+          break;
+        }
+      }
+      return escaped;
+    };
+
+    // Run old implementation
+    auto start_old = std::chrono::steady_clock::now();
+    for (int i = 0; i < 500; ++i)
+    {
+      std::string out = old_escape(big);
+      CHECK(!out.empty());
+    }
+    auto dur_old = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_old).count();
+
+    // Run new reserved implementation
+    auto start_new = std::chrono::steady_clock::now();
+    for (int i = 0; i < 500; ++i)
+    {
+      std::string out = new_escape(big);
+      CHECK(!out.empty());
+    }
+    auto dur_new = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_new).count();
+
+    DOCTEST_MESSAGE("JsonEscapePerformance: old=" << dur_old << "ms new=" << dur_new << "ms (" << (100.0 * (dur_old - dur_new) / dur_old) << "% faster) for 500 iterations");
+  }
 }

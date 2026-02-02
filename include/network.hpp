@@ -463,19 +463,22 @@ public:
     }
 
     set_socket_timeout(30, sockfd);
+
+    // Honor test hook proactively so tests can force a connect failure
+    if (test_download_hook)
+    {
+      if (int forced = test_download_hook("connect"); forced != 0)
+      {
+        freeaddrinfo(result);
+        close_socket(sockfd);
+        cleanup_winsock();
+        return {false, forced, "Forced connect failure"};
+      }
+    }
+
     status = connect(sockfd, result->ai_addr, result->ai_addrlen);
     if (status < 0)
     {
-      if (test_download_hook)
-      {
-        if (int forced = test_download_hook("connect"); forced != 0)
-        {
-          freeaddrinfo(result);
-          close_socket(sockfd);
-          cleanup_winsock();
-          return {false, forced, "Forced connect failure"};
-        }
-      }
       freeaddrinfo(result);
       close_socket(sockfd);
       cleanup_winsock();
@@ -487,20 +490,23 @@ public:
     request += "Connection: close\r\n\r\n";
 
     // NOLINT(misc-include-cleaner)
+
+    // Honor test hook proactively so tests can force a send failure (normalized to standard network error code 8)
+    if (test_download_hook)
+    {
+      if (int forced = test_download_hook("send"); forced != 0)
+      {
+        freeaddrinfo(result);
+        close_socket(sockfd);
+        cleanup_winsock();
+        return {false, 8, "Forced send failure"};
+      }
+    }
+
     if (ssize_t send_status =
             send(sockfd, request.c_str(), request.length(), 0);
         send_status < 0)
     {
-      if (test_download_hook)
-      {
-        if (int forced = test_download_hook("send"); forced != 0)
-        {
-          freeaddrinfo(result);
-          close_socket(sockfd);
-          cleanup_winsock();
-          return {false, forced, "Forced send failure"};
-        }
-      }
       freeaddrinfo(result);
       close_socket(sockfd);
       cleanup_winsock();
