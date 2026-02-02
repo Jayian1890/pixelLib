@@ -20,6 +20,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#pragma once
 
 #ifndef PIXELLIB_CORE_LOGGING_HPP
 #define PIXELLIB_CORE_LOGGING_HPP
@@ -34,6 +35,7 @@
 #include <ctime>
 #include <deque>
 #include <exception>
+#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -1645,13 +1647,15 @@ public:
     }
     else
     {
-      // Format the message with key-value pairs
-      std::ostringstream oss;
-      oss << "[" << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S") << "] [" << log_level_to_string(level) << "] " << message;
-
-      // Add key-value pairs
-      format_key_value_pairs(oss, std::forward<Args>(args)...);
-      formatted_message = oss.str();
+      // Format the message with key-value pairs using std::format for better performance
+      std::string key_value_part;
+      if constexpr (sizeof...(Args) > 0)
+      {
+        std::ostringstream kv_oss;
+        format_key_value_pairs(kv_oss, std::forward<Args>(args)...);
+        key_value_part = kv_oss.str();
+      }
+      formatted_message = std::format("[{:%F %T}] [{}] {}{}", now, log_level_to_string(level), message, key_value_part);
 
       // Prefer sinks if available (early fast path)
       {

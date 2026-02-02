@@ -54,10 +54,18 @@ ifeq ($(IS_CLANG),1)
 	$(LLVM_PROFDATA) merge -sparse default.profraw -o default.profdata
 	$(LLVM_COV) show ./build/unit_tests -instr-profile=default.profdata > build/coverage/coverage.txt
 	$(LLVM_COV) report ./build/unit_tests -instr-profile=default.profdata
-	gcovr -r . --exclude 'third-party/*' --exclude 'tests/*' --lcov -o build/coverage/coverage.lcov && echo "LCOV report generated at build/coverage/coverage.lcov" || echo "Failed to generate LCOV report"
+	@command -v gcovr >/dev/null 2>&1 \
+		&& gcovr -r . --exclude 'third-party/*' --exclude 'tests/*' --lcov -o build/coverage/coverage.lcov \
+		&& echo "LCOV report generated at build/coverage/coverage.lcov" \
+		|| echo "gcovr not found; to generate LCOV install it (e.g. 'pip install gcovr' or 'apt-get install gcovr')."
 else ifeq ($(IS_GCC),1)
-	gcovr -r . --html --html-details -o build/coverage/index.html .
-	lcov --capture --directory . --output-file build/coverage/coverage.lcov --exclude "*/third-party/*" --exclude "*/tests/*" 2>/dev/null && echo "LCOV report generated at build/coverage/coverage.lcov" || echo "Note: lcov not installed, install with: brew install lcov (macOS) or apt-get install lcov (Linux)"
+	@command -v gcovr >/dev/null 2>&1 \
+		&& gcovr -r . --html --html-details -o build/coverage/index.html . \
+		|| echo "gcovr not found; to generate HTML coverage install it (e.g. 'pip install gcovr' or 'apt-get install gcovr')."
+	@command -v lcov >/dev/null 2>&1 \
+		&& lcov --capture --directory . --output-file build/coverage/coverage.lcov --exclude "*/third-party/*" --exclude "*/tests/*" 2>/dev/null \
+		&& echo "LCOV report generated at build/coverage/coverage.lcov" \
+		|| echo "Note: lcov not installed, install with: brew install lcov (macOS) or apt-get install lcov (Linux)"
 endif
 
 clean:

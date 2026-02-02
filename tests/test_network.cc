@@ -619,7 +619,8 @@ TEST_SUITE("Test Helper Methods")
 
     double latency3 = pixellib::core::network::Network::measure_latency("example.com", -1);
     CHECK(latency3 == -1.0);
-
+    
+    set_env_var("PIXELLIB_TEST_MODE", "1");
     // Test valid parameters
     set_env_var("PIXELLIB_TEST_MODE", "1");
     double latency4 = pixellib::core::network::Network::measure_latency("example.com", 1);

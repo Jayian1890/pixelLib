@@ -21,6 +21,8 @@
  * SOFTWARE.
  */
 
+#pragma once
+
 #ifndef PIXELLIB_CORE_JSON_HPP
 #define PIXELLIB_CORE_JSON_HPP
 
