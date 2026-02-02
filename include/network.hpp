@@ -34,6 +34,7 @@
 #include <ctime>
 #include <fstream>
 #include <functional>
+#include <iomanip>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -810,12 +811,51 @@ public:
 
   static std::string url_encode(const std::string &value)
   {
-    return value;
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex;
+
+    for (char c : value)
+    {
+      if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
+      {
+        escaped << c;
+      }
+      else
+      {
+        escaped << '%' << std::setw(2) << static_cast<int>(static_cast<unsigned char>(c));
+      }
+    }
+
+    return escaped.str();
   }
 
   static std::string url_decode(const std::string &value)
   {
-    return value;
+    std::ostringstream unescaped;
+    for (size_t i = 0; i < value.length(); ++i)
+    {
+      if (value[i] == '%')
+      {
+        if (i + 2 < value.length())
+        {
+          std::istringstream iss(value.substr(i + 1, 2));
+          int hex_val;
+          iss >> std::hex >> hex_val;
+          unescaped << static_cast<char>(hex_val);
+          i += 2;
+        }
+        else
+        {
+          return unescaped.str();
+        }
+      }
+      else
+      {
+        unescaped << value[i];
+      }
+    }
+    return unescaped.str();
   }
 
   static std::vector<std::string> get_network_interfaces()

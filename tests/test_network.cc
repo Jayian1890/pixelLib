@@ -187,10 +187,10 @@ TEST_SUITE("Network Module")
   TEST_CASE("Url")
   {
     ::std::string encoded = pixellib::core::network::Network::url_encode("hello world");
-    CHECK(encoded == "hello world"); // Placeholder implementation returns input unchanged
+    CHECK(encoded == "hello%20world");
 
     ::std::string decoded = pixellib::core::network::Network::url_decode("hello%20world");
-    CHECK(decoded == "hello%20world"); // Placeholder implementation returns input unchanged
+    CHECK(decoded == "hello world");
   }
 
   TEST_CASE("Interfaces")
@@ -515,46 +515,44 @@ TEST_SUITE("Test Helper Methods")
 
   TEST_CASE("UrlEncodeEdgeCases")
   {
-    // The current implementation is a placeholder that returns the input unchanged
-    CHECK(pixellib::core::network::Network::url_encode("hello+world") == "hello+world");
-    CHECK(pixellib::core::network::Network::url_encode("hello&world") == "hello&world");
-    CHECK(pixellib::core::network::Network::url_encode("hello=world") == "hello=world");
-    CHECK(pixellib::core::network::Network::url_encode("hello%world") == "hello%world");
-    CHECK(pixellib::core::network::Network::url_encode("hello#world") == "hello#world");
-    CHECK(pixellib::core::network::Network::url_encode("hello?world") == "hello?world");
-    CHECK(pixellib::core::network::Network::url_encode("hello/world") == "hello/world");
-    CHECK(pixellib::core::network::Network::url_encode("hello@world") == "hello@world");
-    CHECK(pixellib::core::network::Network::url_encode("hello$world") == "hello$world");
+    CHECK(pixellib::core::network::Network::url_encode("hello+world") == "hello%2bworld");
+    CHECK(pixellib::core::network::Network::url_encode("hello&world") == "hello%26world");
+    CHECK(pixellib::core::network::Network::url_encode("hello=world") == "hello%3dworld");
+    CHECK(pixellib::core::network::Network::url_encode("hello%world") == "hello%25world");
+    CHECK(pixellib::core::network::Network::url_encode("hello#world") == "hello%23world");
+    CHECK(pixellib::core::network::Network::url_encode("hello?world") == "hello%3fworld");
+    CHECK(pixellib::core::network::Network::url_encode("hello/world") == "hello%2fworld");
+    CHECK(pixellib::core::network::Network::url_encode("hello@world") == "hello%40world");
+    CHECK(pixellib::core::network::Network::url_encode("hello$world") == "hello%24world");
 
     // Test empty string
     CHECK(pixellib::core::network::Network::url_encode("") == "");
 
-    // Test already encoded characters (placeholder doesn't double-encode)
-    CHECK(pixellib::core::network::Network::url_encode("hello%20world") == "hello%20world");
+    // Test already encoded characters
+    CHECK(pixellib::core::network::Network::url_encode("hello%20world") == "hello%2520world");
   }
 
   TEST_CASE("UrlDecodeEdgeCases")
   {
-    // The current implementation is a placeholder that returns the input unchanged
-    CHECK(pixellib::core::network::Network::url_decode("hello%2Bworld") == "hello%2Bworld");
-    CHECK(pixellib::core::network::Network::url_decode("hello%26world") == "hello%26world");
-    CHECK(pixellib::core::network::Network::url_decode("hello%3Dworld") == "hello%3Dworld");
-    CHECK(pixellib::core::network::Network::url_decode("hello%25world") == "hello%25world");
-    CHECK(pixellib::core::network::Network::url_decode("hello%23world") == "hello%23world");
-    CHECK(pixellib::core::network::Network::url_decode("hello%3Fworld") == "hello%3Fworld");
-    CHECK(pixellib::core::network::Network::url_decode("hello%2Fworld") == "hello%2Fworld");
-    CHECK(pixellib::core::network::Network::url_decode("hello%40world") == "hello%40world");
-    CHECK(pixellib::core::network::Network::url_decode("hello%24world") == "hello%24world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%2bworld") == "hello+world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%26world") == "hello&world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%3dworld") == "hello=world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%25world") == "hello%world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%23world") == "hello#world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%3fworld") == "hello?world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%2fworld") == "hello/world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%40world") == "hello@world");
+    CHECK(pixellib::core::network::Network::url_decode("hello%24world") == "hello$world");
 
-    // Plus sign to space conversion (placeholder doesn't convert)
+    // Plus sign to space conversion
     CHECK(pixellib::core::network::Network::url_decode("hello+world") == "hello+world");
 
     // Test empty string
     CHECK(pixellib::core::network::Network::url_decode("") == "");
 
-    // Test incomplete percent encoding (placeholder doesn't modify)
-    CHECK(pixellib::core::network::Network::url_decode("hello%2") == "hello%2");
-    CHECK(pixellib::core::network::Network::url_decode("hello%") == "hello%");
+    // Test incomplete percent encoding
+    CHECK(pixellib::core::network::Network::url_decode("hello%2") == "hello");
+    CHECK(pixellib::core::network::Network::url_decode("hello%") == "hello");
   }
 
   TEST_CASE("Ipv6EdgeCases")
