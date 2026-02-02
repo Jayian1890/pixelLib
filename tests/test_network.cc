@@ -237,13 +237,45 @@ TEST_SUITE("Network Module")
     CHECK_FALSE(pixellib::core::network::Network::is_valid_ipv4("192.168.1.001")); // Leading zero in last
   }
 
+  TEST_CASE("Ipv4Performance")
+  {
+    // Micro-benchmark to observe performance change locally. Does not assert on time
+    // to avoid CI flakiness; prints timing information via MESSAGE so developers
+    // can measure improvements when running locally.
+    const std::string valid = "192.168.1.1";
+    const std::string invalid = "256.168.1.1";
+    constexpr int iterations = 100000;
+
+    auto start = std::chrono::high_resolution_clock::now();
+    int valid_count = 0;
+    for (int i = 0; i < iterations; ++i)
+    {
+      if (pixellib::core::network::Network::is_valid_ipv4(valid))
+        ++valid_count;
+    }
+    auto mid = std::chrono::high_resolution_clock::now();
+    int invalid_count = 0;
+    for (int i = 0; i < iterations; ++i)
+    {
+      if (!pixellib::core::network::Network::is_valid_ipv4(invalid))
+        ++invalid_count;
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto ms_valid = std::chrono::duration_cast<std::chrono::milliseconds>(mid - start).count();
+    auto ms_invalid = std::chrono::duration_cast<std::chrono::milliseconds>(end - mid).count();
+
+    MESSAGE("Ipv4Performance: valid=" << ms_valid << "ms invalid=" << ms_invalid << "ms for " << iterations << " iterations");
+    CHECK(valid_count == iterations);
+    CHECK(invalid_count == iterations);
+  }
+
   TEST_CASE("Ipv6")
   {
     // Valid IPv6 addresses (basic checks)
     CHECK(pixellib::core::network::Network::is_valid_ipv6("::1"));
     CHECK(pixellib::core::network::Network::is_valid_ipv6("2001:db8::1"));
     CHECK(pixellib::core::network::Network::is_valid_ipv6("fe80::1"));
-
     // Invalid IPv6 addresses
     CHECK_FALSE(pixellib::core::network::Network::is_valid_ipv6(""));
     CHECK_FALSE(pixellib::core::network::Network::is_valid_ipv6("192.168.1.1")); // IPv4 format
