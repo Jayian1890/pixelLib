@@ -353,9 +353,12 @@ TEST_SUITE("Network Module")
 
   TEST_CASE("LatencyValid")
   {
+    // Use deterministic test mode to avoid relying on external network
+    set_env_var("PIXELLIB_TEST_MODE", "1");
     double latency = pixellib::core::network::Network::measure_latency("example.com", 4);
     CHECK(latency >= 10.0);
     CHECK(latency <= 3000.0);
+    unset_env_var("PIXELLIB_TEST_MODE");
   }
 
   TEST_CASE("MeasureBandwidth")
@@ -617,13 +620,15 @@ TEST_SUITE("Test Helper Methods")
 
     double latency3 = pixellib::core::network::Network::measure_latency("example.com", -1);
     CHECK(latency3 == -1.0);
-
+    
+    set_env_var("PIXELLIB_TEST_MODE", "1");
     // Test valid parameters
     double latency4 = pixellib::core::network::Network::measure_latency("example.com", 1);
     CHECK(latency4 >= 10.0);
 
     double latency5 = pixellib::core::network::Network::measure_latency("example.com", 10);
     CHECK(latency5 >= 10.0);
+    unset_env_var("PIXELLIB_TEST_MODE");
   }
 
   TEST_CASE("BandwidthMeasurementEdgeCases")
