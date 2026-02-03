@@ -235,4 +235,45 @@ TEST_SUITE("FileSystem Module")
       CHECK(!cur.empty());
       CHECK(FileSystem::is_directory(cur));
     }
+
+    TEST_CASE("WriteFileFailsOnDirectory")
+    {
+      std::string dir = make_temp_dir();
+      REQUIRE(!dir.empty());
+
+      // Attempting to write to a path that is a directory should fail
+      CHECK_FALSE(FileSystem::write_file(dir, "should fail"));
+
+      remove_dir_tree(dir);
+    }
+
+    TEST_CASE("CreateDirectoriesEmptyPath")
+    {
+      // Empty path should return false
+      CHECK_FALSE(FileSystem::create_directories(""));
+    }
+
+    TEST_CASE("CreateDirectoriesOnExistingDirectory")
+    {
+      std::string dir = make_temp_dir();
+      REQUIRE(!dir.empty());
+
+      // Already-existing directory should be considered created
+      CHECK(FileSystem::create_directories(dir));
+
+      remove_dir_tree(dir);
+    }
+
+    TEST_CASE("CreateDirectoriesTrailingSlash")
+    {
+      std::string dir = make_temp_dir();
+      REQUIRE(!dir.empty());
+
+      // Path with trailing slash should be normalized and created
+      std::string nested = dir + "/trailing/";
+      CHECK(FileSystem::create_directories(nested));
+      CHECK(FileSystem::is_directory(dir + "/trailing"));
+
+      remove_dir_tree(dir);
+    }
 }
