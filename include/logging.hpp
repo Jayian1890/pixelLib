@@ -1529,6 +1529,14 @@ public:
     log(LOG_INFO, message);
   }
 
+  // Optimization: avoid std::string temporaries for literal usage
+  static void info(const char *message)
+  {
+    if (LOG_INFO < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_INFO, std::string(message));
+  }
+
   /**
    * @brief Log an informational message with file and line information
    *
@@ -1541,6 +1549,13 @@ public:
     log(LOG_INFO, message, file, line);
   }
 
+  static void info(const char *message, const char *file, int line)
+  {
+    if (LOG_INFO < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_INFO, std::string(message), file, line);
+  }
+
   /**
    * @brief Log a warning message
    *
@@ -1549,6 +1564,13 @@ public:
   static void warning(const std::string &message)
   {
     log(LOG_WARNING, message);
+  }
+
+  static void warning(const char *message)
+  {
+    if (LOG_WARNING < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_WARNING, std::string(message));
   }
 
   /**
@@ -1563,6 +1585,13 @@ public:
     log(LOG_WARNING, message, file, line);
   }
 
+  static void warning(const char *message, const char *file, int line)
+  {
+    if (LOG_WARNING < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_WARNING, std::string(message), file, line);
+  }
+
   /**
    * @brief Log an error message
    *
@@ -1571,6 +1600,13 @@ public:
   static void error(const std::string &message)
   {
     log(LOG_ERROR, message);
+  }
+
+  static void error(const char *message)
+  {
+    if (LOG_ERROR < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_ERROR, std::string(message));
   }
 
   /**
@@ -1583,6 +1619,13 @@ public:
   static void error(const std::string &message, const char *file, int line)
   {
     log(LOG_ERROR, message, file, line);
+  }
+
+  static void error(const char *message, const char *file, int line)
+  {
+    if (LOG_ERROR < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_ERROR, std::string(message), file, line);
   }
 
   /**
@@ -1598,6 +1641,20 @@ public:
     log(LOG_TRACE, message, file, line);
   }
 
+  static void trace(const char *message)
+  {
+    if (LOG_TRACE < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_TRACE, std::string(message));
+  }
+
+  static void trace(const char *message, const char *file, int line)
+  {
+    if (LOG_TRACE < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_TRACE, std::string(message), file, line);
+  }
+
   template <typename... Args> static void trace(const char *format, Args &&...args)
   {
     format_and_log_with_format_string<Args...>(LOG_TRACE, format, std::forward<Args>(args)...);
@@ -1606,6 +1663,7 @@ public:
   // Compile-time disabled: provide no-op stubs to preserve API
   static void trace(const std::string &) {}
   static void trace(const std::string &, const char *, int) {}
+  static void trace(const char *, const char *, int) {}
   template <typename... Args> static void trace(const char *, Args &&...) {}
 #endif
 
@@ -1616,9 +1674,24 @@ public:
   {
     log(LOG_FATAL, message);
   }
+
+  static void fatal(const char *message)
+  {
+    if (LOG_FATAL < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_FATAL, std::string(message));
+  }
+
   static void fatal(const std::string &message, const char *file, int line)
   {
     log(LOG_FATAL, message, file, line);
+  }
+
+  static void fatal(const char *message, const char *file, int line)
+  {
+    if (LOG_FATAL < static_cast<LogLevel>(current_level.load()))
+      return;
+    log(LOG_FATAL, std::string(message), file, line);
   }
 
   template <typename... Args> static void fatal(const char *format, Args &&...args)
