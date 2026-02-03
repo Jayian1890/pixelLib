@@ -1,10 +1,12 @@
 # Codecov configuration
 
+codecov: 
+ token: f0e98b56-ee56-4cf1-bf13-b852b19f9e66
+
 # Ignore third-party directory completely (vendor / external deps)
 ignore:
   - "third-party/**"
 
-# Codecov configuration
 # Ignore third-party directory completely (vendor / external deps)
 coverage:
   status:
