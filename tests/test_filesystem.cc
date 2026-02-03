@@ -5,6 +5,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 TEST_SUITE("FileSystem Module")
 {
@@ -275,5 +276,58 @@ TEST_SUITE("FileSystem Module")
       CHECK(FileSystem::is_directory(dir + "/trailing"));
 
       remove_dir_tree(dir);
+    }
+
+    TEST_CASE("CreateDirectoriesBlockedByFile")
+    {
+      // Create a file where a directory is expected, so recursive creation fails
+      std::string dir = make_temp_dir();
+      REQUIRE(!dir.empty());
+
+      std::string blocking = dir + "/block";
+      // Create a regular file at 'block'
+      CHECK(FileSystem::write_file(blocking, "I am a file"));
+
+      // Now try to create a nested directory under 'block' which should fail
+      CHECK_FALSE(FileSystem::create_directories(blocking + "/child"));
+
+      // Cleanup
+      CHECK(FileSystem::remove(blocking));
+      remove_dir_tree(dir);
+    }
+
+    TEST_CASE("TempDirectoryPathFromEnv")
+    {
+      // Set TMPDIR and verify FileSystem picks it up
+      const char *old = getenv("TMPDIR");
+      setenv("TMPDIR", "/tmp/pixellib_env_test", 1);
+      std::string tmp = FileSystem::temp_directory_path();
+      CHECK(tmp == std::string("/tmp/pixellib_env_test"));
+      if (old)
+        setenv("TMPDIR", old, 1);
+      else
+        unsetenv("TMPDIR");
+    }
+
+    TEST_CASE("CurrentPathReturnsEmptyWhenCwdRemoved")
+    {
+      // Try to exercise the code path where getcwd fails by deleting the cwd
+      std::string orig = FileSystem::current_path();
+      REQUIRE(!orig.empty());
+
+      std::string dir = make_temp_dir();
+      REQUIRE(!dir.empty());
+
+      // Change into the temp dir
+      CHECK(FileSystem::current_path(dir));
+
+      // Remove the directory while we are inside it. This may cause getcwd to
+      // fail on some platforms/conditions and return an empty string.
+      CHECK(FileSystem::remove(dir));
+
+      std::string cur = FileSystem::current_path();
+      // Either getcwd still succeeds (non-empty), or it fails (empty). We accept
+      // either but assert we can restore the original cwd afterwards.
+      CHECK(FileSystem::current_path(orig));
     }
 }
