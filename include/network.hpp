@@ -115,12 +115,47 @@ struct NetworkResult
   }
 
   // Also provide a global namespace wrappers to preserve existing API surface in tests
+  // Global free-function wrappers to ensure tests in the global namespace see them
   inline std::string url_encode(const std::string& value) {
-    return pixellib::core::network::url_encode(value);
+    static const char* hex = "0123456789ABCDEF";
+    std::string result;
+    for (unsigned char c : value) {
+      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~') {
+        result.push_back(static_cast<char>(c));
+      } else {
+        result.push_back('%');
+        result.push_back(hex[c >> 4]);
+        result.push_back(hex[c & 0x0F]);
+      }
+    }
+    return result;
   }
 
   inline std::string url_decode(const std::string& value) {
-    return pixellib::core::network::url_decode(value);
+    std::string result;
+    size_t i = 0;
+    auto tohex = [](char ch) -> int {
+      if (ch >= '0' && ch <= '9') return ch - '0';
+      if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+      if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+      return 0;
+    };
+    while (i < value.size()) {
+      if (value[i] == '%' && i + 2 < value.size()) {
+        int high = tohex(value[i+1]);
+        int low  = tohex(value[i+2]);
+        unsigned char ch = static_cast<unsigned char>((high << 4) | low);
+        result.push_back(static_cast<char>(ch));
+        i += 3;
+      } else if (value[i] == '+') {
+        result.push_back(' ');
+        ++i;
+      } else {
+        result.push_back(value[i]);
+        ++i;
+      }
+    }
+    return result;
   }
 // Production-grade URL representation and parser
 struct Url
