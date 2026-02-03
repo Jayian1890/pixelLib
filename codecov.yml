@@ -1,0 +1,4 @@
+# Codecov configuration
+# Ignore third-party directory completely (vendor / external deps)
+ignore:
+  - "third-party/**"
