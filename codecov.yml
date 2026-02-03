@@ -4,23 +4,27 @@
 ignore:
   - "third-party/**"
 
-codecov: 
- token: f0e98b56-ee56-4cf1-bf13-b852b19f9e66
-
+# Codecov configuration
+# Ignore third-party directory completely (vendor / external deps)
 coverage:
   status:
     project:
       default:   # default is the status check's name, not default settings
-        target: auto 
+        target: auto
         threshold: 5
-        base: auto 
-        flags: 
+        base: auto
+        flags:
           - unit
-        paths: 
+        paths:
           - "include"
-       # advanced settings
-        branches: 
+        branches:
           - main
-        if_ci_failed: error #success, failure, error, ignore
+        if_ci_failed: error # success, failure, error, ignore
         informational: false
         only_pulls: false
+
+# Test reports (JUnit) for Codecov Test Analytics
+# Codecov automatically scans for *junit.xml by default; include explicit path for clarity
+tests:
+  junit:
+    - build/unit_tests_junit.xml
