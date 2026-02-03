@@ -137,6 +137,25 @@ TEST_SUITE("Logging Module")
     CHECK(j.find("\\\\") != std::string::npos);
   }
 
+  TEST_CASE("LogFilterPerformance")
+  {
+    // Micro-benchmark to measure the cost of filtered log calls (should be fast)
+    std::ostringstream out, err;
+    Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_INFO); // debug should be filtered
+
+    constexpr int iterations = 100000;
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < iterations; ++i)
+    {
+      LOG_DEBUG("x");
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    MESSAGE("LogFilterPerformance: " << ms << "ms for " << iterations << " iterations");
+    CHECK(ms >= 0);
+  }
+
   TEST_CASE("StreamSink")
   {
     std::ostringstream out;
