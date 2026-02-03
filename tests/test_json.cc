@@ -288,4 +288,30 @@ TEST_SUITE("JSON Module")
     CHECK_FALSE(pixellib::core::json::JSON::parse("null garbage", v, &err));
     CHECK(err.message.find("Trailing") != std::string::npos);
   }
+  
+  TEST_CASE("FindExistingKey")
+  {
+    pixellib::core::json::JSON obj = pixellib::core::json::JSON::object(pixellib::core::json::JSON::object_t{
+      {"a", pixellib::core::json::JSON::number("1")},
+      {"b", pixellib::core::json::JSON::array(pixellib::core::json::JSON::array_t{pixellib::core::json::JSON(true), pixellib::core::json::JSON(false)})}
+    });
+    const pixellib::core::json::JSON* p = obj.find("a");
+    REQUIRE(p != nullptr);
+    CHECK(p->is_number());
+    CHECK(p->as_number().to_int64() == 1);
+
+    p = obj.find("b");
+    REQUIRE(p != nullptr);
+    REQUIRE(p->is_array());
+    CHECK(p->as_array().size() == 2);
+  }
+
+  TEST_CASE("ObjectMutableViaBrackets")
+  {
+    pixellib::core::json::JSON obj = pixellib::core::json::JSON::object(pixellib::core::json::JSON::object_t{});
+    pixellib::core::json::JSON& ref = obj["newKey"];
+    ref = pixellib::core::json::JSON(std::string("hello"));
+    CHECK(obj["newKey"].is_string());
+    CHECK(obj["newKey"].as_string() == std::string("hello"));
+  }
 }
