@@ -137,11 +137,6 @@ TEST_SUITE("Logging Module")
     CHECK(j.find("\\\\") != std::string::npos);
   }
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
   TEST_CASE("LogFilterPerformance")
   {
     // Micro-benchmark to measure the cost of filtered log calls (should be fast)
@@ -150,47 +145,18 @@ TEST_SUITE("Logging Module")
     Logger::set_level(LOG_INFO); // debug should be filtered
 
     constexpr int iterations = 100000;
-<<<<<<< Updated upstream
     auto start = std::chrono::high_resolution_clock::now();
-=======
-
-    // Case A: macro call with a string literal (optimized path we added)
-    auto startA = std::chrono::high_resolution_clock::now();
->>>>>>> Stashed changes
     for (int i = 0; i < iterations; ++i)
     {
       LOG_DEBUG("x");
     }
-<<<<<<< Updated upstream
     auto end = std::chrono::high_resolution_clock::now();
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     MESSAGE("LogFilterPerformance: " << ms << "ms for " << iterations << " iterations");
     CHECK(ms >= 0);
   }
 
-=======
-    auto endA = std::chrono::high_resolution_clock::now();
-    auto msA = std::chrono::duration_cast<std::chrono::milliseconds>(endA - startA).count();
-    MESSAGE("LogFilterPerformance (literal macro): " << msA << "ms for " << iterations << " iterations");
 
-    // Case B: force a std::string allocation each call (baseline to compare)
-    auto startB = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < iterations; ++i)
-    {
-      // This construct forces a temporary std::string to be created before calling
-      // the API and represents the pre-optimized behavior.
-      Logger::debug(std::string("x"), __FILE__, __LINE__);
-    }
-    auto endB = std::chrono::high_resolution_clock::now();
-    auto msB = std::chrono::duration_cast<std::chrono::milliseconds>(endB - startB).count();
-    MESSAGE("LogFilterPerformance (forced allocation): " << msB << "ms for " << iterations << " iterations");
-
-    CHECK(msA >= 0);
-    CHECK(msB >= 0);
-  }
-
->>>>>>> Stashed changes
->>>>>>> Stashed changes
   TEST_CASE("StreamSink")
   {
     std::ostringstream out;
