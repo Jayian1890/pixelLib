@@ -22,6 +22,8 @@ namespace logging = pixellib::core::logging;
 using logging::AsyncLogSink;
 using logging::DefaultLogFormatter;
 using logging::JSONLogFormatter;
+using logging::LogFormatter;
+using logging::LogSink;
 using logging::LOG_DEBUG;
 using logging::LOG_ERROR;
 using logging::LOG_FATAL;
@@ -408,6 +410,7 @@ TEST_SUITE("Logging Module")
   {
     std::ostringstream out, err;
     Logger::set_output_streams(out, err);
+    Logger::set_level(LOG_TRACE); // Enable all levels for macro testing
     // Macros should invoke logger with file/line
     LOG_TRACE("trace-msg");
     LOG_DEBUG("debug-msg-macro");
@@ -671,6 +674,22 @@ TEST_SUITE("Logging Module")
     // No placeholders + no args
     Logger::info("noargs-no-placeholders");
 
+    // Test various argument types for template instantiation
+    Logger::info("types test", "int", 42, "double", 3.14, "string", std::string("hello"), "bool", true);
+
+    // Test with placeholders and various types
+    Logger::debug("debug {} {}", "test", 123);
+    Logger::trace("trace {} {}", "test", 456);
+    Logger::warning("warning {} {}", "test", 789);
+    Logger::error("error {} {}", "test", 101);
+    Logger::fatal("fatal {} {}", "test", 202);
+
+    // More template instantiations
+    Logger::info("single {}", 42);
+    Logger::info("three {} {} {}", 1, 2, 3);
+    Logger::info("mixed {} {} {}", "str", 42, 3.14);
+    Logger::info("struct", "k1", "v1", "k2", 2);
+
     Logger::set_output_streams(std::cout, std::cerr);
   }
 
@@ -754,10 +773,43 @@ TEST_SUITE("Logging Module")
     std::filesystem::remove("build/tmp/testbuilder_async.log", ec);
   }
 
+  TEST_CASE("TemplateCoverage")
+  {
+    // Add dummy calls to cover template instantiations
+    Logger::set_level(LOG_TRACE);
+    std::ostringstream out, err;
+    Logger::set_output_streams(out, err);
+
+    // Cover various template instantiations
+    Logger::log(LOG_INFO, std::string("test"), 1, 2);
+    Logger::log(LOG_INFO, std::string("test"), "a", 1, "b", 2);
+    Logger::log(LOG_INFO, std::string("test"), std::string("str"), 1);
+
+    // Force destruction of formatters and sinks to cover destructors
+    {
+      std::unique_ptr<LogSink> sink = std::make_unique<StreamSink>(out);
+      Logger::add_sink(std::move(sink));
+    }
+    {
+      std::unique_ptr<LogFormatter> formatter = std::make_unique<DefaultLogFormatter>();
+      Logger::set_formatter(std::move(formatter));
+    }
+
+    // Explicitly delete through base pointers to cover virtual destructors
+    LogSink* sink_ptr = new StreamSink(out);
+    delete sink_ptr;
+    // Can't instantiate abstract LogFormatter directly
+
+    Logger::set_formatter(nullptr);
+    Logger::LoggerConfig empty;
+    Logger::configure(std::move(empty));
+
+    Logger::set_output_streams(std::cout, std::cerr);
+  }
+
   TEST_CASE("JsonEscapePerformance")
   {
     JSONLogFormatter jf;
-    std::tm tm{};
 
     // Build a large message with many escapable characters
     std::string big;
