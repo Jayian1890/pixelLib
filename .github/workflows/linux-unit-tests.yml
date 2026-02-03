@@ -42,7 +42,7 @@ jobs:
           make build_test
 
       - name: Run tests
-        run: make run_test
+        run: make run_test UNIT_TEST_ARGS="--reporters=junit --out=build/unit_tests_junit.xml"
 
       - name: Run coverage
         env:
@@ -60,3 +60,10 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+            token: ${{ secrets.CODECOV_TOKEN }}
+            files: build/unit_tests_junit.xml

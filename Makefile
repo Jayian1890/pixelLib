@@ -8,6 +8,7 @@ WARN := -Wall -Wextra -Wpedantic
 DBG := -g
 INCLUDES := -Iinclude -Ithird-party
 LIBS :=
+UNIT_TEST_ARGS ?=
 CLANG_TIDY ?= /opt/homebrew/Cellar/llvm/21.1.8/bin/clang-tidy
 
 # Platform detection
@@ -46,7 +47,7 @@ build_test:
 	$(CXX) -std=$(STD) $(WARN) $(DBG) $(COV_CFLAGS) $(INCLUDES) -o build/unit_tests tests/doctest_main.cpp tests/test_filesystem.cc tests/test_json.cc tests/test_logging.cc tests/test_network.cc $(LIBS)
 
 run_test: build_test
-	./build/unit_tests
+	./build/unit_tests $(UNIT_TEST_ARGS)
 
 coverage: run_test
 	mkdir -p build/coverage

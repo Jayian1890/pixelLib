@@ -7,7 +7,7 @@ ignore:
 codecov: 
  token: f0e98b56-ee56-4cf1-bf13-b852b19f9e66
 
- coverage:
+coverage:
   status:
     project:
       default:   # default is the status check's name, not default settings
@@ -20,7 +20,7 @@ codecov:
           - "include"
        # advanced settings
         branches: 
-          - master
+          - main
         if_ci_failed: error #success, failure, error, ignore
         informational: false
         only_pulls: false
