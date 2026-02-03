@@ -2,6 +2,7 @@
 !.vscode/launch.json
 !.vscode/settings.json
 !.vscode/tasks.json
+!.vscode/mcp.json
 
 # Build directories
 build/
@@ -57,4 +58,3 @@ default.profraw
 test.txt
 debug_url2
 default.profdata
-settings.json
