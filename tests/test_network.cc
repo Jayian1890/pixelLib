@@ -1134,4 +1134,14 @@ TEST_SUITE("Test Helper Methods")
     std::remove(test_file3.c_str());
     unset_env_var("PIXELLIB_TEST_MODE");
   }
+
+  // Additional coverage to push toward 100%
+  TEST_CASE("UrlEncodingRoundTripExtra")
+  {
+    using namespace pixellib::core::network;
+    const std::string orig = "sample+test@path/file?arg=1";
+    const auto enc = url_encode(orig);
+    const auto dec = url_decode(enc);
+    CHECK(dec == orig);
+  }
 }
