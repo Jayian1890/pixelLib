@@ -8,7 +8,7 @@ WARN := -Wall -Wextra -Wpedantic
 DBG := -g
 INCLUDES := -Iinclude -Ithird-party
 LIBS :=
-UNIT_TEST_ARGS ?=
+UNIT_TEST_ARGS ?= -r=junit -o=build/unit_tests_junit.xml
 CLANG_TIDY ?= /opt/homebrew/Cellar/llvm/21.1.8/bin/clang-tidy
 
 # Platform detection
