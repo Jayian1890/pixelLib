@@ -105,9 +105,7 @@ public:
   static std::string read_file(const std::string &path)
   {
     std::ifstream file(path, std::ios::binary);
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
+    return std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
   }
 
   static bool write_file(const std::string &path, const std::string &content)
