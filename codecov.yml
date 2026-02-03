@@ -1,9 +1,26 @@
 # Codecov configuration
 
-
 # Ignore third-party directory completely (vendor / external deps)
 ignore:
   - "third-party/**"
 
 codecov: 
  token: f0e98b56-ee56-4cf1-bf13-b852b19f9e66
+
+ coverage:
+  status:
+    project:
+      default:   # default is the status check's name, not default settings
+        target: auto 
+        threshold: 5
+        base: auto 
+        flags: 
+          - unit
+        paths: 
+          - "src"
+       # advanced settings
+        branches: 
+          - master
+        if_ci_failed: error #success, failure, error, ignore
+        informational: false
+        only_pulls: false

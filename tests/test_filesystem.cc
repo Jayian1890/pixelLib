@@ -188,4 +188,51 @@ TEST_SUITE("FileSystem Module")
 
     remove_dir_tree(dir);
   }
+
+    TEST_CASE("ExistsAndTypes")
+    {
+      std::string dir = make_temp_dir();
+      REQUIRE(!dir.empty());
+      std::string file = dir + "/sample.txt";
+      CHECK(FileSystem::write_file(file, "data"));
+      CHECK(FileSystem::exists(file));
+      CHECK(FileSystem::is_directory(dir));
+      CHECK(FileSystem::is_regular_file(file));
+      // Cleanup
+      CHECK(FileSystem::remove(file));
+      // Remove directory afterwards is handled by cleanup below
+  
+      remove_dir_tree(dir);
+    }
+
+    TEST_CASE("IsDirectoryOnFile")
+    {
+      std::string dir = make_temp_dir();
+      REQUIRE(!dir.empty());
+      std::string file = dir + "/sample2.txt";
+      CHECK(FileSystem::write_file(file, "x"));
+      CHECK_FALSE(FileSystem::is_directory(file));
+      CHECK_FALSE(FileSystem::is_directory(dir + "/nonexistent"));
+      remove_dir_tree(dir);
+    }
+
+    TEST_CASE("RootPathsAreTrivial")
+    {
+      // These should be treated as already-existing roots by the implementation
+      CHECK(FileSystem::create_directories("/"));
+      CHECK(FileSystem::create_directories("\\"));
+    }
+
+    TEST_CASE("DirectoryIteratorNonexistent")
+    {
+      auto entries = FileSystem::directory_iterator("/path/that/definitely/does/not/exist");
+      CHECK(entries.empty());
+    }
+
+    TEST_CASE("CurrentPathNoArg")
+    {
+      std::string cur = FileSystem::current_path();
+      CHECK(!cur.empty());
+      CHECK(FileSystem::is_directory(cur));
+    }
 }
