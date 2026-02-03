@@ -39,6 +39,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <optional>
 
 #include <arpa/inet.h>
 #include <sys/time.h>
@@ -67,6 +68,165 @@ struct NetworkResult
   int error_code;
   std::string message;
   NetworkResult(const bool success_param, const int error_code_param, std::string message_param) : success(success_param), error_code(error_code_param), message(std::move(message_param)) {}
+};
+
+// Production-grade URL representation and parser
+struct Url
+{
+  std::string scheme;
+  std::string userinfo;
+  std::string host;
+  int port = 0;
+  std::string path;
+  std::string query;
+  std::string fragment;
+
+  std::string authority() const
+  {
+    std::string a;
+    if (!userinfo.empty())
+      a = userinfo + "@";
+    if (host.find(':') != std::string::npos)
+      a += std::string("[") + host + "]";
+    else
+      a += host;
+    if (port > 0)
+      a += ":" + std::to_string(port);
+    return a;
+  }
+
+  std::string to_string() const
+  {
+    std::string out = scheme + "://" + authority();
+    out += (path.empty() ? "/" : path);
+    if (!query.empty()) out += "?" + query;
+    if (!fragment.empty()) out += "#" + fragment;
+    return out;
+  }
+
+  static int default_port_for_scheme(const std::string &scheme)
+  {
+    if (scheme == "http") return 80;
+    if (scheme == "https") return 443;
+    return 0;
+  }
+
+  // Parse a URL. Returns NetworkResult (success==false uses error_code 6 for invalid format to match existing API)
+  static NetworkResult parse(const std::string &url_str, Url &out)
+  {
+    if (url_str.empty())
+    {
+      return {false, 6, "Invalid URL format"};
+    }
+
+    const size_t scheme_end = url_str.find("://");
+    if (scheme_end == std::string::npos)
+    {
+      return {false, 6, "Invalid URL format"};
+    }
+
+    out = Url();
+    out.scheme = url_str.substr(0, scheme_end);
+    size_t pos = scheme_end + 3;
+
+    // authority = [userinfo@]host[:port]
+    size_t path_start = url_str.find_first_of("/?#", pos);
+    const std::string authority = (path_start == std::string::npos) ? url_str.substr(pos) : url_str.substr(pos, path_start - pos);
+
+    // Separate userinfo
+    size_t at_pos = authority.find('@');
+    std::string hostport = authority;
+    if (at_pos != std::string::npos)
+    {
+      out.userinfo = authority.substr(0, at_pos);
+      hostport = authority.substr(at_pos + 1);
+      if (out.userinfo.empty())
+      {
+        return {false, 6, "Invalid URL format"};
+      }
+    }
+
+    // IPv6 literal [::1]
+    if (!hostport.empty() && hostport[0] == '[')
+    {
+      const size_t rb = hostport.find(']');
+      if (rb == std::string::npos)
+      {
+        return {false, 6, "Invalid URL format"};
+      }
+      out.host = hostport.substr(1, rb - 1);
+      if (rb + 1 < hostport.size())
+      {
+        if (hostport[rb + 1] == ':')
+        {
+          const std::string port_str = hostport.substr(rb + 2);
+          try
+          {
+            out.port = std::stoi(port_str);
+          }
+          catch (...) { return {false, 6, "Invalid URL format"}; }
+        }
+        else
+        {
+          return {false, 6, "Invalid URL format"};
+        }
+      }
+    }
+    else
+    {
+      // host[:port] - be careful to pick the last colon as port separator only when it's unambiguous
+      size_t colon_pos = hostport.rfind(':');
+      if (colon_pos != std::string::npos && hostport.find(':') == colon_pos)
+      {
+        out.host = hostport.substr(0, colon_pos);
+        const std::string port_str = hostport.substr(colon_pos + 1);
+        if (port_str.empty())
+          return {false, 6, "Invalid URL format"};
+        try
+        {
+          out.port = std::stoi(port_str);
+        }
+        catch (...) { return {false, 6, "Invalid URL format"}; }
+      }
+      else
+      {
+        out.host = hostport;
+      }
+    }
+
+    // If host empty -> invalid
+    if (out.host.empty())
+      return {false, 6, "Invalid URL format"};
+
+    // Validate and set defaults
+    if (out.port == 0)
+      out.port = default_port_for_scheme(out.scheme);
+
+    // Path/query/fragment
+    if (path_start != std::string::npos)
+    {
+      size_t p = path_start;
+      size_t q = url_str.find('?', p);
+      size_t h = url_str.find('#', p);
+      size_t path_end = std::min(q == std::string::npos ? url_str.size() : q, h == std::string::npos ? url_str.size() : h);
+      out.path = url_str.substr(p, path_end - p);
+      if (q != std::string::npos)
+      {
+        size_t query_end = (h == std::string::npos) ? url_str.size() : h;
+        out.query = url_str.substr(q + 1, query_end - q - 1);
+      }
+      if (h != std::string::npos)
+      {
+        out.fragment = url_str.substr(h + 1);
+      }
+    }
+    else
+    {
+      out.path = "/";
+    }
+
+    return {true, 0, "OK"};
+  }
 };
 
 class Network
@@ -364,11 +524,19 @@ public:
       return {false, 2, "Destination path is empty"};
     }
 
-    if (url.find("http://") != 0 && url.find("https://") != 0)
+    // Validate scheme early (before test mode): only http/https allowed
+    Url parsed_url;
+    auto parse_result = Url::parse(url, parsed_url);
+    if (!parse_result.success)
+    {
+      return parse_result;
+    }
+    if (parsed_url.scheme != "http" && parsed_url.scheme != "https")
     {
       return {false, 6, "Invalid URL format"};
     }
 
+    // Test mode short-circuit
     if (is_test_mode())
     {
       FILE *file = fopen(destination.c_str(), "wb");
@@ -382,44 +550,10 @@ public:
       return {true, 0, "File downloaded successfully (test mode)"};
     }
 
-    std::string host, path;
-    int port = 80;
-
-    if (size_t protocol_end = url.find("://");
-        protocol_end != std::string::npos)
-    {
-      std::string protocol;
-      protocol = url.substr(0, protocol_end);
-      if (protocol == "https")
-      {
-        port = 443;
-      }
-
-      size_t host_start = protocol_end + 3;
-
-      if (size_t host_end = url.find('/', host_start);
-          host_end == std::string::npos)
-      {
-        host = url.substr(host_start);
-        path = "/";
-      }
-      else
-      {
-        host = url.substr(host_start, host_end - host_start);
-        path = url.substr(host_end);
-      }
-
-      if (size_t port_pos = host.find(':'); port_pos != std::string::npos)
-      {
-        std::string port_str = host.substr(port_pos + 1);
-        host = host.substr(0, port_pos);
-        port = std::stoi(port_str);
-      }
-    }
-    else
-    {
-      return {false, 6, "Invalid URL format"};
-    }
+    // Parse URL using production Url parser
+    std::string host = parsed_url.host;
+    std::string path = parsed_url.path;
+    int port = parsed_url.port;
     std::string port_str = std::to_string(port);
     if (!initialize_winsock())
     {
@@ -617,45 +751,16 @@ public:
     }
 
     // Real implementation using socket connection
-    std::string host, path;
-    int port = 80;
-
-    // Parse URL
-    if (size_t protocol_end = url.find("://");
-        protocol_end != std::string::npos)
-    {
-      std::string protocol;
-      protocol = url.substr(0, protocol_end);
-      if (protocol == "https")
-      {
-        port = 443;
-      }
-
-      size_t host_start = protocol_end + 3;
-
-      if (size_t host_end = url.find('/', host_start);
-          host_end == std::string::npos)
-      {
-        host = url.substr(host_start);
-        path = "/";
-      }
-      else
-      {
-        host = url.substr(host_start, host_end - host_start);
-        path = url.substr(host_end);
-      }
-
-      if (size_t port_pos = host.find(':'); port_pos != std::string::npos)
-      {
-        std::string port_str = host.substr(port_pos + 1);
-        host = host.substr(0, port_pos);
-        port = std::stoi(port_str);
-      }
-    }
-    else
+    // Parse URL using Url parser
+    Url parsed_url;
+    auto parse_result = Url::parse(url, parsed_url);
+    if (!parse_result.success)
     {
       return "Invalid URL format";
     }
+    std::string host = parsed_url.host;
+    std::string path = parsed_url.path;
+    int port = parsed_url.port;
 
     // Create socket and send HTTP request
     int sockfd = create_socket_connection(host, port);
@@ -719,45 +824,16 @@ public:
     }
 
     // Real implementation using socket connection
-    std::string host, path;
-    int port = 80;
-
-    // Parse URL (same as http_get)
-    if (size_t protocol_end = url.find("://");
-        protocol_end != std::string::npos)
-    {
-      std::string protocol;
-      protocol = url.substr(0, protocol_end);
-      if (protocol == "https")
-      {
-        port = 443;
-      }
-
-      size_t host_start = protocol_end + 3;
-
-      if (size_t host_end = url.find('/', host_start);
-          host_end == std::string::npos)
-      {
-        host = url.substr(host_start);
-        path = "/";
-      }
-      else
-      {
-        host = url.substr(host_start, host_end - host_start);
-        path = url.substr(host_end);
-      }
-
-      if (size_t port_pos = host.find(':'); port_pos != std::string::npos)
-      {
-        std::string port_str = host.substr(port_pos + 1);
-        host = host.substr(0, port_pos);
-        port = std::stoi(port_str);
-      }
-    }
-    else
+    // Parse URL using Url parser
+    Url parsed_url;
+    auto parse_result = Url::parse(url, parsed_url);
+    if (!parse_result.success)
     {
       return "Invalid URL format";
     }
+    std::string host = parsed_url.host;
+    std::string path = parsed_url.path;
+    int port = parsed_url.port;
 
     // Create a socket and send HTTP POST request
     int sockfd = create_socket_connection(host, port);

@@ -957,6 +957,51 @@ TEST_SUITE("Test Helper Methods")
     unset_env_var("PIXELLIB_TEST_MODE");
   }
 
+  TEST_CASE("UrlParse")
+  {
+    using namespace pixellib::core::network;
+
+    Url u;
+    auto r = Url::parse("http://example.com/path?query=1#frag", u);
+    CHECK(r.success == true);
+    CHECK(u.scheme == "http");
+    CHECK(u.host == "example.com");
+    CHECK(u.port == 80);
+    CHECK(u.path == "/path");
+    CHECK(u.query == "query=1");
+    CHECK(u.fragment == "frag");
+    CHECK(u.to_string() == "http://example.com/path?query=1#frag");
+
+    r = Url::parse("https://user:pass@example.com:8443/", u);
+    CHECK(r.success == true);
+    CHECK(u.scheme == "https");
+    CHECK(u.userinfo == "user:pass");
+    CHECK(u.host == "example.com");
+    CHECK(u.port == 8443);
+
+    r = Url::parse("http://[::1]:8080/", u);
+    CHECK(r.success == true);
+    CHECK(u.host == "::1");
+    CHECK(u.port == 8080);
+
+    r = Url::parse("http://example.com", u);
+    CHECK(r.success == true);
+    CHECK(u.path == "/");
+    CHECK(u.port == 80);
+
+    r = Url::parse("noscheme", u);
+    CHECK(r.success == false);
+
+    r = Url::parse("http://", u);
+    CHECK(r.success == false);
+
+    r = Url::parse("http://[::1", u);
+    CHECK(r.success == false);
+
+    r = Url::parse("http://example.com:", u);
+    CHECK(r.success == false);
+  }
+
   TEST_CASE("HttpResponseParsingComprehensive")
   {
     using namespace pixellib::core::network;
