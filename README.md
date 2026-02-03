@@ -1,5 +1,8 @@
 # pixelLib
 
+[![Linux Unit Tests](https://github.com/Jayian1890/pixelLib/actions/workflows/linux-unit-tests.yml/badge.svg)](https://github.com/Jayian1890/pixelLib/actions/workflows/linux-unit-tests.yml)
+[![Codecov](https://codecov.io/gh/Jayian1890/pixelLib/branch/main/graph/badge.svg)](https://codecov.io/gh/Jayian1890/pixelLib)
+
 A comprehensive C++ core library providing essential utilities for filesystem operations, JSON parsing, logging, and network operations.
 
 ## Features

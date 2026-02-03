@@ -1,0 +1,60 @@
+name: Linux Unit Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build & Run Tests ({{ matrix.cxx }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cxx: [ g++, clang++ ]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install clang (when needed)
+        if: matrix.cxx == 'clang++'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+
+      - name: Show selected compiler
+        run: |
+          echo "Using CXX=${{ matrix.cxx }}"
+          ${{ matrix.cxx }} --version || true
+
+      - name: Build tests
+        env:
+          CXX: ${{ matrix.cxx }}
+        run: |
+          make clean || true
+          make build_test
+
+      - name: Run tests
+        run: make run_test
+
+      - name: Run coverage
+        env:
+          CXX: ${{ matrix.cxx }}
+        run: |
+          make coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.cxx }}
+          path: build/coverage
+
+      - name: Upload to Codecov
+        if: secrets.CODECOV_TOKEN != ''
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/coverage/*.lcov
