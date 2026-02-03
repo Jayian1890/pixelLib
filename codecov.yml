@@ -17,7 +17,7 @@ codecov:
         flags: 
           - unit
         paths: 
-          - "src"
+          - "include"
        # advanced settings
         branches: 
           - master
